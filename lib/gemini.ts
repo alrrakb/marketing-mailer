@@ -1,13 +1,13 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY || "AIzaSy_PLACEHOLDER_FOR_BUILD"; // Fallback to prevent build crash
 
-if (!apiKey) {
-    console.warn("GEMINI_API_KEY is not defined in environment variables");
+if (!process.env.GEMINI_API_KEY) {
+    console.warn("GEMINI_API_KEY is not defined in environment variables. AI features will fail at runtime.");
 }
 
-const genAI = new GoogleGenerativeAI(apiKey || "");
+const genAI = new GoogleGenerativeAI(apiKey);
 
 // Priority list of models to try
 const MODELS = [
