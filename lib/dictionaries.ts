@@ -237,6 +237,24 @@ export const en = {
         sign_in: "Sign In",
         signing_in: "Signing in...",
         error_creds: "Invalid credentials",
+    },
+    ai: {
+        btn_generate: "Generate with AI",
+        modal_generate_title: "Generate Draft",
+        modal_refine_title: "Polish Content",
+        placeholder_generate: "Describe the email you want to send. Mention recipients if you have them...",
+        placeholder_refine: "How should I improve the current content? (e.g., \"Make it more professional\", \"Add a call to action\")...",
+        cancel: "Cancel",
+        generate: "Generate",
+        refine: "Refine",
+        generating: "Generating...",
+        refining: "Refining...",
+        error_no_content: "Please write some content first to refine it.",
+        success_generated: "Draft generated successfully!",
+        success_refined: "Content polished successfully!",
+        error_generic: "AI Error",
+        hint_generate: "Describe the email you want to send. Mention recipients if you have them.",
+        hint_refine: "How should I improve the current content? (e.g., \"Make it more professional\", \"Add a call to action\")"
     }
 };
 
@@ -477,5 +495,23 @@ export const ar: Dictionary = {
         sign_in: "دخول",
         signing_in: "جاري الدخول...",
         error_creds: "بيانات الدخول غير صحيحة",
+    },
+    ai: {
+        btn_generate: "توليد بالذكاء الاصطناعي",
+        modal_generate_title: "توليد مسودة",
+        modal_refine_title: "تحسين المحتوى",
+        placeholder_generate: "وصف الرسالة التي تريد إرسالها. اذكر المستلمين إذا كان لديك...",
+        placeholder_refine: "كيف يمكنني تحسين المحتوى الحالي؟ (مثلاً: \"اجعلها أكثر احترافية\"، \"أضف دعوة لاتخاذ إجراء\")...",
+        cancel: "إلغاء",
+        generate: "توليد",
+        refine: "تحسين",
+        generating: "جاري التوليد...",
+        refining: "جاري التحسين...",
+        error_no_content: "يرجى كتابة بعض المحتوى أولاً لتحسينه.",
+        success_generated: "تم توليد المسودة بنجاح!",
+        success_refined: "تم تحسين المحتوى بنجاح!",
+        error_generic: "خطأ في الذكاء الاصطناعي",
+        hint_generate: "صف الرسالة التي تريد إرسالها. اذكر المستلمين إن وجدوا.",
+        hint_refine: "كيف تريد تحسين المحتوى الحالي؟ (مثال: اجعله أكثر رسمية)"
     }
 };

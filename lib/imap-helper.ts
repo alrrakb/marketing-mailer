@@ -36,7 +36,7 @@ export class ImapHelper {
             const messages = await connection.search(searchCriteria, fetchOptions);
             console.log(`Found ${messages.length} messages.`);
 
-            const parsedMessages = await Promise.all(messages.map(async (msg) => {
+            const parsedMessages = await Promise.all(messages.map(async (msg: any) => {
                 const all = msg.parts.find((part: any) => part.which === '');
                 const id = msg.attributes.uid;
                 const body = all ? all.body : '';

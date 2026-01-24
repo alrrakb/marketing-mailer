@@ -88,7 +88,7 @@ export default function ProfilePage() {
                 <div className="bg-[#39285e]/10 p-2 rounded-lg text-[#39285e] dark:bg-[#79bbe0]/10 dark:text-[#79bbe0]">
                     <User className="w-6 h-6" />
                 </div>
-                {dict.profile.my_profile}
+                {dict.common.my_profile}
             </h1>
 
             {message && (

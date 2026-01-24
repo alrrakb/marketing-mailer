@@ -272,7 +272,7 @@ export default function AdminUsersPage() {
                             <th className="px-6 py-4 text-start">{dict.admin.users_table.status}</th>
                             <th className="px-6 py-4 text-start">{dict.admin.users_table.created}</th>
                             <th className="px-6 py-4 text-start">{dict.admin.users_table.last_login}</th>
-                            <th className="px-6 py-4 text-end">{dict.admin.actions}</th>
+                            <th className="px-6 py-4 text-end">{dict.common.actions}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-700">

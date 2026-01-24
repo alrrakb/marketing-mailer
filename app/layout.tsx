@@ -6,9 +6,11 @@ import AuthProvider from "@/components/auth/AuthProvider";
 import LanguageProvider from "@/components/providers/LanguageProvider";
 
 export const metadata: Metadata = {
-  title: "Tala'ea Al-Rakeb Mailer",
+  title: "ALRRAKB Mailer",
   description: "Professional Email Marketing System",
 };
+
+import { Toaster } from 'sonner';
 
 export default function RootLayout({
   children,
@@ -21,6 +23,7 @@ export default function RootLayout({
         <AuthProvider>
           <LanguageProvider>
             {children}
+            <Toaster position="top-center" richColors />
           </LanguageProvider>
         </AuthProvider>
       </body>

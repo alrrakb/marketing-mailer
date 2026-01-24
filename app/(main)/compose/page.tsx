@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Editor from '@/components/email/Editor';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Save, Send, Loader2, Eye, FileText, Sparkles, Mail, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, Send, Loader2, Eye, FileText, Sparkles, Mail, AlertTriangle, X } from 'lucide-react';
 import EmailPreview from '@/components/email/EmailPreview';
 import { useLanguage } from '@/components/providers/LanguageProvider';
+import { toast } from 'sonner';
 
 type FormData = {
     recipients: string;
@@ -21,6 +22,7 @@ export default function ComposePage() {
     const { user } = useAuth();
     const { dict, dir } = useLanguage();
     const [content, setContent] = useState('');
+    const [editorKey, setEditorKey] = useState(0); // Force editor remount
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -29,7 +31,75 @@ export default function ComposePage() {
     const [draftToLoad, setDraftToLoad] = useState<any | null>(null);
     const [attachments, setAttachments] = useState<{ filename: string, content: string, encoding: 'base64' }[]>([]);
 
+    // AI State
+    const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+    const [aiMode, setAiMode] = useState<'generate' | 'refine'>('generate');
+    const [aiPrompt, setAiPrompt] = useState('');
+    const [isAILoading, setIsAILoading] = useState(false);
+
     const { register, handleSubmit, getValues, setValue, formState: { errors } } = useForm<FormData>();
+
+    const openAIModal = (mode: 'generate' | 'refine') => {
+        setAiMode(mode);
+        setAiPrompt('');
+        setIsAIModalOpen(true);
+    };
+
+    const handleAIRequest = async () => {
+        if (!aiPrompt.trim()) return;
+        setIsAILoading(true);
+        try {
+            if (aiMode === 'generate') {
+                const res = await fetch('/api/ai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: aiPrompt, senderName: user?.user_metadata?.full_name || 'Al-Rrakb Team' })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                setValue('subject', data.subject);
+                setContent(data.content);
+                setEditorKey(k => k + 1);
+                if (data.recipients && Array.isArray(data.recipients) && data.recipients.length > 0) {
+                    setValue('recipients', data.recipients.join(', '));
+                }
+                if (data.recipients && Array.isArray(data.recipients) && data.recipients.length > 0) {
+                    setValue('recipients', data.recipients.join(', '));
+                }
+                toast.success(dict.ai.success_generated);
+                // setMessage({ type: 'success', text: 'Draft generated successfully!' });
+            } else {
+                // Refine
+                // Strip HTML tags to check real content length
+                const strippedContent = content.replace(/<[^>]*>/g, '').trim();
+
+                if (!strippedContent && content.length < 50) {
+                    // Only error if truly empty AND html is short (avoids blocking complex empty structures)
+                    toast.error(dict.ai.error_no_content);
+                    return;
+                }
+
+                const res = await fetch('/api/ai/refine', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content, instruction: aiPrompt })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                setContent(data.content);
+                setEditorKey(k => k + 1);
+                toast.success(dict.ai.success_refined);
+                // setMessage({ type: 'success', text: 'Content polished successfully!' });
+            }
+            setIsAIModalOpen(false);
+        } catch (error: any) {
+            toast.error(error.message || dict.ai.error_generic);
+        } finally {
+            setIsAILoading(false);
+        }
+    };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
@@ -186,6 +256,14 @@ export default function ComposePage() {
                     <div className="flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
                         <button
                             type="button"
+                            onClick={() => openAIModal('generate')}
+                            className="flex-1 md:flex-none justify-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white border-0 rounded-lg font-bold transition-all flex items-center gap-2 shadow-md hover:shadow-lg text-sm"
+                        >
+                            <Sparkles className="w-4 h-4 text-yellow-300" />
+                            <span className="hidden sm:inline">{dict.ai.btn_generate}</span>
+                        </button>
+                        <button
+                            type="button"
                             onClick={loadDrafts}
                             className="flex-1 md:flex-none justify-center px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 font-medium transition-all flex items-center gap-2 shadow-sm text-sm"
                         >
@@ -314,7 +392,7 @@ export default function ComposePage() {
 
                         <div className="p-4">
                             <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                                <Editor value={content} onChange={setContent} />
+                                <Editor key={editorKey} value={content} onChange={setContent} onRefine={() => openAIModal('refine')} />
                             </div>
                         </div>
                     </div>
@@ -398,6 +476,60 @@ export default function ComposePage() {
                                 >
                                     {dict.compose.limit_load}
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* AI Modal */}
+                {isAIModalOpen && (
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
+                        <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col">
+                            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 text-white">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                                        <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
+                                        {aiMode === 'generate' ? dict.ai.modal_generate_title : dict.ai.modal_refine_title}
+                                    </h3>
+                                    <button onClick={() => setIsAIModalOpen(false)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <p className="text-white/80 text-sm mt-2">
+                                    {aiMode === 'generate'
+                                        ? dict.ai.hint_generate
+                                        : dict.ai.hint_refine}
+                                </p>
+                            </div>
+
+                            <div className="p-6">
+                                <textarea
+                                    value={aiPrompt}
+                                    onChange={(e) => setAiPrompt(e.target.value)}
+                                    placeholder={aiMode === 'generate' ? dict.ai.placeholder_generate : dict.ai.placeholder_refine}
+                                    className="w-full h-32 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-6 dark:text-white"
+                                    autoFocus
+                                />
+
+                                <div className="flex justify-end gap-3">
+                                    <button
+                                        onClick={() => setIsAIModalOpen(false)}
+                                        className="px-4 py-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                                    >
+                                        {dict.ai.cancel}
+                                    </button>
+                                    <button
+                                        onClick={handleAIRequest}
+                                        disabled={isAILoading || !aiPrompt.trim()}
+                                        className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-lg shadow-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
+                                    >
+                                        {isAILoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                                        {aiMode === 'generate'
+                                            ? (isAILoading ? dict.ai.generating : dict.ai.generate)
+                                            : (isAILoading ? dict.ai.refining : dict.ai.refine)
+                                        }
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

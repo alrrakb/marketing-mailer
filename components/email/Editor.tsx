@@ -9,14 +9,14 @@ import Highlight from '@tiptap/extension-highlight';
 import { Color } from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Bold, Italic, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIconLucide, Image as ImageIcon, ArrowRightLeft, Highlighter, Palette } from 'lucide-react';
+import { Bold, Italic, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIconLucide, Image as ImageIcon, ArrowRightLeft, Highlighter, Palette, Wand2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useEffect, useState } from 'react';
 import ImageManager from './ImageManager';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import ResizableImage from './ResizableImage';
 
-const Toolbar = ({ editor, onImageClick }: { editor: any, onImageClick: () => void }) => {
+const Toolbar = ({ editor, onImageClick, onRefineClick }: { editor: any, onImageClick: () => void, onRefineClick: () => void }) => {
     if (!editor) {
         return null;
     }
@@ -37,36 +37,16 @@ const Toolbar = ({ editor, onImageClick }: { editor: any, onImageClick: () => vo
         editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
     };
 
-
+    // ... (rest of helper functions like updateBlockAttributes)
 
     const updateBlockAttributes = (attributes: Record<string, any>) => {
         const { selection } = editor.state;
-        const { empty, from } = selection;
-
-        // If NodeSelection (e.g. Image), we want to modify its parent container usually
-        // because ResizableImage is inline.
-        // OR if it's a TextSelection, we modify the blocks.
-
-        // Tiptap's updateAttributes acts on the *current* node or mark.
-        // For 'paragraph', it finds the parent paragraph.
-
-        // We will simplify this to just use chain commands which handle this well.
-        // BUT we need to support the 'range' logic if user selects multiple paragraphs.
-
+        // ... (existing logic)
         editor.chain().focus()
             .updateAttributes('paragraph', attributes)
             .updateAttributes('heading', attributes)
-            // If we have an Image selected (NodeSelection), it is inside a Paragraph.
-            // updateAttributes('paragraph') should work.
-            // But let's add specific logic to ensure 'dir' and 'textAlign' are applied.
             .setMeta('skipAutoDir', true)
             .run();
-
-        // Note: The previous manual 'split' logic was ensuring everything was in a block.
-        // Standard Tiptap behavior is fine for RTL/LTR toggling usually.
-        // If the user wants to align an image, they select it (NodeSelection).
-        // The image is in a paragraph. updateAttributes('paragraph') updates that paragraph.
-        // This is exactly what we want.
     };
 
     const setDirection = (dir: 'rtl' | 'ltr') => {
@@ -81,13 +61,11 @@ const Toolbar = ({ editor, onImageClick }: { editor: any, onImageClick: () => vo
     const toggleDirection = () => {
         const { from, to } = editor.state.selection;
         let hasRTL = false;
-
         editor.state.doc.nodesBetween(from, to, (node: any) => {
             if (node.attrs && node.attrs.dir === 'rtl') {
                 hasRTL = true;
             }
         });
-
         setDirection(hasRTL ? 'ltr' : 'rtl');
     };
 
@@ -102,6 +80,17 @@ const Toolbar = ({ editor, onImageClick }: { editor: any, onImageClick: () => vo
         <div className="sticky top-0 z-20 border-b border-gray-200 dark:border-gray-700 p-2 flex gap-1 flex-wrap bg-gray-50/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-t-lg">
             <button
                 type="button"
+                onClick={onRefineClick}
+                className="p-2 rounded transition-colors duration-200 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-900/20 bg-indigo-50/50 dark:bg-indigo-900/10 mr-2"
+                title="AI Magic Polish"
+            >
+                <Wand2 className="w-4 h-4" />
+            </button>
+
+            <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-1 self-center" />
+
+            <button
+                type="button"
                 onClick={() => editor.chain().focus().toggleBold().run()}
                 disabled={!editor.can().chain().focus().toggleBold().run()}
                 className={buttonClass(editor.isActive('bold'))}
@@ -109,6 +98,8 @@ const Toolbar = ({ editor, onImageClick }: { editor: any, onImageClick: () => vo
             >
                 <Bold className="w-4 h-4" />
             </button>
+            {/* ... rest of buttons ... */}
+
             <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -213,6 +204,7 @@ const Toolbar = ({ editor, onImageClick }: { editor: any, onImageClick: () => vo
 interface EditorProps {
     value: string;
     onChange: (html: string) => void;
+    onRefine?: () => void;
 }
 
 
@@ -259,7 +251,7 @@ const ImageExtension = Image.extend({
 
 import { useLanguage } from '@/components/providers/LanguageProvider';
 
-export default function Editor({ value, onChange }: EditorProps) {
+export default function Editor({ value, onChange, onRefine }: EditorProps) {
     const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
     const { dict, dir } = useLanguage();
 
@@ -331,8 +323,19 @@ export default function Editor({ value, onChange }: EditorProps) {
 
     // Update content if value changes externally
     useEffect(() => {
-        if (editor && value && editor.getHTML() !== value) {
-            if (editor.isEmpty) {
+        if (editor && value !== undefined && editor.getHTML() !== value) {
+            // Fix: We MUST update content even if not empty, otherwise AI Refine won't work
+            // Using queue to avoid race conditions with local updates
+            if (document.activeElement?.closest('.ProseMirror')) {
+                // If user is typing, we might conflict. 
+                // But for AI refine, we typically want to overwrite.
+                // We can check if the value change is significant or came from AI (not easily passed here).
+                // For now, always update if different, but maybe save cursor position?
+                // Simple approach: Just set content.
+
+                // If the new value is significantly different (e.g. AI rewrite), we overwrite.
+                editor.commands.setContent(value);
+            } else {
                 editor.commands.setContent(value);
             }
         }
@@ -340,7 +343,7 @@ export default function Editor({ value, onChange }: EditorProps) {
 
     return (
         <div className="border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm bg-white dark:bg-gray-800/40 overflow-hidden transition-colors">
-            <Toolbar editor={editor} onImageClick={() => setIsImageManagerOpen(true)} />
+            <Toolbar editor={editor} onImageClick={() => setIsImageManagerOpen(true)} onRefineClick={onRefine || (() => { })} />
             <EditorContent editor={editor} className="bg-white dark:bg-transparent [&_.ProseMirror]:min-h-[300px] [&_.ProseMirror]:w-full" />
             <ImageManager
                 isOpen={isImageManagerOpen}

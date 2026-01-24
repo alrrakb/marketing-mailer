@@ -143,34 +143,29 @@ export default function InboxPage() {
     };
 
     const getStyledContent = (content: string) => {
-        const darkModeStyles = `
+        // We force a white background for the email content to ensure templates execute as designed.
+        // Most HTML emails are designed for white backgrounds.
+        const styles = `
             <style>
-                :root { color-scheme: light dark; }
                 body {
                     margin: 0;
+                    padding: 0;
+                    background-color: #ffffff !important;
+                    color: #000000 !important;
                     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
                 }
-                /* Default Light Mode Styles for plain fragments */
-                body { background-color: #ffffff; color: #111827; padding: 1.5rem; }
+                /* Ensure links are blue */
+                a { color: #2563eb !important; text-decoration: underline; }
                 
-                @media (prefers-color-scheme: dark) {
-                    body { background-color: #030712 !important; color: #e5e7eb !important; }
-                    a { color: #60a5fa !important; }
-                    
-                    /* Overrides for rich HTML templates */
-                    .es-wrapper-color, .es-wrapper { background-color: #030712 !important; }
-                    .es-content-body, .es-header-body, .es-footer-body { background-color: #1f2937 !important; border-color: #374151 !important; }
-                    
-                    p, h1, h2, h3, h4, h5, h6, span, td, li, div { color: #e5e7eb !important; }
-                    
-                    /* Ensure links in dark mode are visible */
-                    a, a span { color: #60a5fa !important; text-decoration: underline; }
-                }
+                /* Scrollbar styling for the iframe content */
+                ::-webkit-scrollbar { width: 8px; height: 8px; }
+                ::-webkit-scrollbar-track { background: transparent; }
+                ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
             </style>
         `;
 
         if (content.includes('<!DOCTYPE html') || content.includes('<html')) {
-            return content.replace('</head>', `${darkModeStyles}</head>`);
+            return content.replace('</head>', `${styles}</head>`);
         } else {
             return `
                 <!DOCTYPE html>
@@ -178,7 +173,7 @@ export default function InboxPage() {
                 <head>
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1">
-                    ${darkModeStyles}
+                    ${styles}
                 </head>
                 <body>
                     ${content}
@@ -229,16 +224,16 @@ export default function InboxPage() {
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex-1">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex-1 flex flex-col">
                 {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400">
                         <InboxIcon className="w-12 h-12 mb-3 opacity-20" />
                         <p>{dict.inbox.no_messages}</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-start">
-                            <thead className="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-medium">
+                    <div className="overflow-auto flex-1">
+                        <table className="w-full text-start border-separate border-spacing-0">
+                            <thead className="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-medium sticky top-0 z-10 backdrop-blur-sm">
                                 <tr>
                                     <th className="px-6 py-4 text-start w-1/4">{dict.inbox.sender}</th>
                                     <th className="px-6 py-4 text-start w-1/3">{dict.inbox.subject}</th>

@@ -44,7 +44,7 @@ export default function LanguageProvider({ children }: { children: React.ReactNo
         localStorage.setItem('app-language', newLang);
     };
 
-    const value = {
+    const value: LanguageContextType = {
         language,
         dict: language === 'en' ? en : ar,
         dir: language === 'en' ? 'ltr' : 'rtl',
