@@ -7,11 +7,17 @@ export async function GET(request: Request) {
     const id = searchParams.get('id');
 
     try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         if (id) {
             const { data, error } = await supabase
                 .from('inbox')
                 .select('*')
                 .eq('id', id)
+                .eq('user_id', user.id) // Enforce ownership
                 .single();
             if (error) throw error;
             return NextResponse.json(data);
@@ -20,6 +26,7 @@ export async function GET(request: Request) {
         const { data, error } = await supabase
             .from('inbox')
             .select('*')
+            .eq('user_id', user.id) // Filter by user
             .order('received_at', { ascending: false });
 
         if (error) throw error;
@@ -84,7 +91,8 @@ export async function POST(request: Request) {
                         received_at: email.date.toISOString(),
                         is_read: false,
                         tags: ['IMAP'],
-                        message_id: email.message_id
+                        message_id: email.message_id,
+                        user_id: user.id // Associate with current user
                     });
                     newCount++;
                 }
@@ -100,6 +108,11 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Sender and Subject are required' }, { status: 400 });
         }
 
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { data, error } = await supabase
             .from('inbox')
             .insert({
@@ -108,7 +121,8 @@ export async function POST(request: Request) {
                 content: body.content || '',
                 tags: body.tags || [],
                 is_read: false,
-                message_id: `sim-${Date.now()}` // Add simulated ID
+                message_id: `sim-${Date.now()}`, // Add simulated ID
+                user_id: user.id
             })
             .select()
             .single();

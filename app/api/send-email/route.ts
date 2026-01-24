@@ -41,7 +41,16 @@ export async function POST(req: Request) {
             .eq('key', 'smtp_password')
             .single();
 
-        const smtpPassword = settingsData?.value || "T@laeAlR4kb#2026!P1";
+        const smtpPassword = settingsData?.value || process.env.SMTP_PASS;
+
+        if (!smtpPassword) {
+            console.error('Missing SMTP Password');
+            return NextResponse.json({ error: 'SMTP Configuration Missing' }, { status: 500 });
+        }
+
+
+        console.log(`Authenticating SMTP as: ${actualSenderEmail}`);
+        console.log(`Password length: ${smtpPassword.length}, First char: ${smtpPassword[0]}, Last char: ${smtpPassword[smtpPassword.length - 1]}`);
 
         // 2. Get User Name (Profile)
         let senderName = "TALAE ALRRAKB"; // Default
@@ -50,7 +59,7 @@ export async function POST(req: Request) {
             // Find user by email to get their ID, then get profile
             // Since we don't have direct email->profile link without ID, we first find the user ID from auth.users (admin only)
             const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
-            const user = users.find(u => u.email === actualSenderEmail);
+            const user = users.find(u => (u.email as string).toLowerCase() === actualSenderEmail.toLowerCase());
 
             if (user) {
                 const { data: profile } = await supabaseAdmin
@@ -65,14 +74,14 @@ export async function POST(req: Request) {
             }
         }
 
-
+        // User Requirement: Auth as the Logged-in User (actualSenderEmail) + Unified Password
         const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT),
-            secure: process.env.SMTP_SECURE === 'true',
+            host: process.env.SMTP_HOST || 'smtp.hostinger.com',
+            port: 465, // Explicitly per user screenshot
+            secure: true, // SSL
             auth: {
-                user: actualSenderEmail,
-                pass: smtpPassword,
+                user: actualSenderEmail, // Auth as the sender
+                pass: smtpPassword, // Unified Password
             },
         });
 
@@ -82,13 +91,16 @@ export async function POST(req: Request) {
             try {
                 const htmlContent = getBaseEmailHtml(content, subject);
 
-                await transporter.sendMail({
-                    from: `"${senderName}" <${actualSenderEmail}>`, // Use Dynamic Name
+                const info = await transporter.sendMail({
+                    from: `"${senderName}" <${actualSenderEmail}>`, // Match the authenticated user
+                    replyTo: actualSenderEmail, // Allow reply to the selected persona
                     to: recipient,
                     subject: subject,
                     html: htmlContent,
                     attachments: attachments,
                 });
+
+                console.log(`SMTP Response for ${recipient}:`, info.response);
 
                 // Log success
                 await supabaseAdmin.from('sent_logs').insert({
