@@ -1,20 +1,23 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-// Create a Supabase client with the SERVICE ROLE key
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false
+// Helper to get admin client at runtime
+function getSupabaseAdmin() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
         }
-    }
-);
+    );
+}
 
 export async function GET(req: Request) {
     try {
+        const supabaseAdmin = getSupabaseAdmin();
         const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
         if (error) throw error;
 
@@ -26,8 +29,8 @@ export async function GET(req: Request) {
         if (profilesError) console.error('Error fetching profiles:', profilesError);
 
         // Merge data
-        const enrichedUsers = users.map(user => {
-            const profile = profiles?.find(p => p.id === user.id);
+        const enrichedUsers = users.map((user: any) => {
+            const profile = profiles?.find((p: any) => p.id === user.id);
             return {
                 ...user,
                 profile: profile || {}
@@ -48,6 +51,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
         }
 
+        const supabaseAdmin = getSupabaseAdmin();
         const { data, error } = await supabaseAdmin.auth.admin.createUser({
             email,
             password,
@@ -84,6 +88,7 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
         }
 
+        const supabaseAdmin = getSupabaseAdmin();
         const { data, error } = await supabaseAdmin.auth.admin.updateUserById(id, updateAttributes);
 
         if (error) {
@@ -107,6 +112,7 @@ export async function DELETE(req: Request) {
             return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
         }
 
+        const supabaseAdmin = getSupabaseAdmin();
         const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
         if (error) throw error;
