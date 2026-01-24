@@ -1,19 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false
-        }
-    }
-);
+// Initialized inside handler to avoid build-time errors
 
 export async function POST(req: Request) {
     try {
+        // Initialize inside handler to avoid build-time env var requirement issues
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            {
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false
+                }
+            }
+        );
+
         const body = await req.json();
         const { action, value } = body;
 
@@ -64,7 +67,7 @@ export async function POST(req: Request) {
 
             // Convert array to object
             const settings: any = {};
-            data.forEach(item => settings[item.key] = item.value);
+            data.forEach((item: any) => settings[item.key] = item.value);
 
             return NextResponse.json(settings);
         }
