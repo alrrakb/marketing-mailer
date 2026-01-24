@@ -133,7 +133,18 @@ export default function ComposePage() {
         setIsLoading(true);
         setMessage(null);
 
+        // Calculate payload size estimation
         const recipientList = data.recipients.split(',').map(email => email.trim()).filter(email => email);
+        const attachmentsSize = attachments.reduce((acc, curr) => acc + (curr.content.length * 0.75), 0); // Base64 overhead approx
+        const contentSize = new Blob([content]).size;
+        const totalSize = attachmentsSize + contentSize;
+
+        // Vercel Serverless Function Limit is ~4.5MB. We set safety margin at 3.5MB.
+        if (totalSize > 3.5 * 1024 * 1024) {
+            setMessage({ type: 'error', text: 'Total message size exceeds 3.5MB limit. Please reduce attachments.' });
+            setIsLoading(false);
+            return;
+        }
 
         try {
             const res = await fetch('/api/send-email', {
@@ -150,12 +161,22 @@ export default function ComposePage() {
                 }),
             });
 
-            const result = await res.json();
-
             if (!res.ok) {
-                throw new Error(result.error || 'Failed to send email');
+                // Handle HTML error responses (like 413)
+                const contentType = res.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const result = await res.json();
+                    throw new Error(result.error || 'Failed to send email');
+                } else {
+                    const text = await res.text();
+                    if (res.status === 413) {
+                        throw new Error('File too large (413). Please reduce attachment size.');
+                    }
+                    throw new Error(`Server Error (${res.status}): ${text.substring(0, 50)}...`);
+                }
             }
 
+            const result = await res.json();
             setMessage({ type: 'success', text: dict.compose.email_sent });
             setAttachments([]); // Clear attachments on success
         } catch (error: any) {
