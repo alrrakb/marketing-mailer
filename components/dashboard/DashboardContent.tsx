@@ -20,7 +20,7 @@ export default function DashboardContent({ sentCount, failedCount, recentLogs }:
                     </div>
                     <div>
                         <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{dict.dashboard.total_sent}</p>
-                        <h3 className="text-3xl font-bold text-gray-900 dark:text-white">{sentCount || 0}</h3>
+                        <h3 className="text-3xl font-bold text-gray-900 dark:text-white">{(sentCount || 0) + (failedCount || 0)}</h3>
                     </div>
                 </div>
 
