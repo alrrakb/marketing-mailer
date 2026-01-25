@@ -367,6 +367,12 @@ export default function Editor({ value, onChange, onRefine }: EditorProps) {
                 .ProseMirror ul, .ProseMirror ol {
                     padding-inline-start: 1.5em;
                 }
+                .ProseMirror ul {
+                    list-style-type: disc;
+                }
+                .ProseMirror ol {
+                    list-style-type: decimal;
+                }
             `}</style>
         </div>
     );
