@@ -9,7 +9,7 @@ import Highlight from '@tiptap/extension-highlight';
 import { Color } from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Bold, Italic, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIconLucide, Image as ImageIcon, ArrowRightLeft, Highlighter, Palette, Wand2 } from 'lucide-react';
+import { Bold, Italic, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIconLucide, Image as ImageIcon, ArrowRightLeft, Highlighter, Palette, Wand2, Type } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useEffect, useState } from 'react';
 import ImageManager from './ImageManager';
@@ -178,6 +178,33 @@ const Toolbar = ({ editor, onImageClick, onRefineClick }: { editor: any, onImage
                 <ImageIcon className="w-4 h-4" />
             </button>
             <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-1 self-center" />
+            <div className="relative flex items-center">
+                <select
+                    className="appearance-none bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 py-1 pl-2 pr-6 rounded cursor-pointer text-xs font-medium focus:outline-none border-none ring-0 w-16"
+                    onChange={(e) => {
+                        const size = e.target.value;
+                        if (size) {
+                            editor.chain().focus().setMark('textStyle', { fontSize: size }).run();
+                        } else {
+                            editor.chain().focus().unsetMark('textStyle').run();
+                        }
+                    }}
+                    value={editor.getAttributes('textStyle').fontSize || ''}
+                    title="Font Size"
+                >
+                    <option value="" disabled className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">Size</option>
+                    <option value="12px" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">12px</option>
+                    <option value="14px" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">14px</option>
+                    <option value="16px" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">16px</option>
+                    <option value="18px" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">18px</option>
+                    <option value="20px" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">20px</option>
+                    <option value="24px" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">24px</option>
+                    <option value="30px" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">30px</option>
+                </select>
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                    <Type className="w-3 h-3" />
+                </div>
+            </div>
             <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleMark('highlight').run()}
@@ -249,6 +276,36 @@ const ImageExtension = Image.extend({
     },
 });
 
+const FontSize = Extension.create({
+    name: 'fontSize',
+    addOptions() {
+        return {
+            types: ['textStyle'],
+        };
+    },
+    addGlobalAttributes() {
+        return [
+            {
+                types: this.options.types,
+                attributes: {
+                    fontSize: {
+                        default: null,
+                        parseHTML: element => element.style.fontSize?.replace(/['"]+/g, ''),
+                        renderHTML: attributes => {
+                            if (!attributes.fontSize) {
+                                return {};
+                            }
+                            return {
+                                style: `font-size: ${attributes.fontSize}`,
+                            };
+                        },
+                    },
+                },
+            },
+        ];
+    },
+});
+
 import { useLanguage } from '@/components/providers/LanguageProvider';
 
 export default function Editor({ value, onChange, onRefine }: EditorProps) {
@@ -274,6 +331,7 @@ export default function Editor({ value, onChange, onRefine }: EditorProps) {
             }),
             Highlight,
             TextStyle,
+            FontSize, // Custom Extension
             Color,
             Color,
             Placeholder.configure({
