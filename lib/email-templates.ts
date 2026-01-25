@@ -127,8 +127,8 @@ export function getBaseEmailHtml(content: string, title: string = 'Update from T
                   <td valign="top" align="center" style="padding:0;Margin:0;width:560px">
                    <table width="100%" cellspacing="0" cellpadding="0" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
                      <tr>
-                      <td align="left" style="padding:0;Margin:0">
-                        <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#666666;font-size:14px">${dateStr}</p>
+                      <td align="center" style="padding:0;Margin:0">
+                        <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#666666;font-size:14px;text-align:center">${dateStr}</p>
                       </td>
                      </tr>
                    </table></td>
