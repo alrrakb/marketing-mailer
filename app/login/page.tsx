@@ -42,8 +42,8 @@ export default function LoginPage() {
             <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                 <div className="text-center">
                     {/* Logo Placeholder - You can add your actual logo here */}
-                    <div className="mx-auto h-16 w-16 bg-blue-600 rounded-xl flex items-center justify-center text-white text-3xl font-bold mb-4 shadow-lg shadow-blue-500/30">
-                        TR
+                    <div className="mx-auto h-20 w-auto flex items-center justify-center mb-4">
+                        <Image src="/logo.png" alt="Logo" width={120} height={120} className="object-contain" unoptimized />
                     </div>
                     <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white">
                         Welcome Back

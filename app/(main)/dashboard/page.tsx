@@ -5,22 +5,39 @@ export const revalidate = 0; // Disable static caching for real-time stats
 
 export default async function DashboardPage() {
     const supabase = await createClient();
-    // Fetch stats
-    const { count: sentCount } = await supabase
+
+    // Get current user
+    const { data: { session } } = await supabase.auth.getSession();
+    const userEmail = session?.user?.email;
+    const isAdmin = userEmail === 'admin@rrakb.com';
+
+    // Base queries
+    let sentQuery = supabase
         .from('sent_logs')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'sent');
 
-    const { count: failedCount } = await supabase
+    let failedQuery = supabase
         .from('sent_logs')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'failed');
 
-    const { data: recentLogs } = await supabase
+    let recentQuery = supabase
         .from('sent_logs')
         .select('*')
         .order('sent_at', { ascending: false })
         .limit(5);
+
+    // Apply user filter if not admin
+    if (!isAdmin && userEmail) {
+        sentQuery = sentQuery.eq('sender_email', userEmail);
+        failedQuery = failedQuery.eq('sender_email', userEmail);
+        recentQuery = recentQuery.eq('sender_email', userEmail);
+    }
+
+    const { count: sentCount } = await sentQuery;
+    const { count: failedCount } = await failedQuery;
+    const { data: recentLogs } = await recentQuery;
 
     return (
         <DashboardContent

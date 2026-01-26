@@ -14,6 +14,7 @@ type SentLog = {
     status: 'sent' | 'failed';
     error_message?: string;
     content?: string;
+    sender_email?: string;
 };
 
 import { useLanguage } from '@/components/providers/LanguageProvider';
@@ -33,11 +34,21 @@ export default function HistoryPage() {
             setIsLoading(true);
             const currentPage = reset ? 0 : page;
 
+            // Get User Session
+            const { data: { session } } = await supabase.auth.getSession();
+            const userEmail = session?.user?.email;
+            const isAdmin = userEmail === 'admin@rrakb.com';
+
             let query = supabase
                 .from('sent_logs')
                 .select('*')
                 .order('sent_at', { ascending: false })
                 .range(currentPage * PER_PAGE, (currentPage + 1) * PER_PAGE - 1);
+
+            // Filter by user if not admin
+            if (!isAdmin && userEmail) {
+                query = query.eq('sender_email', userEmail);
+            }
 
             if (searchQuery) {
                 query = query.or(`subject.ilike.%${searchQuery}%,recipient.ilike.%${searchQuery}%`);
@@ -262,6 +273,11 @@ export default function HistoryPage() {
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
                                         {dict.history.sent_to} <span className="font-medium text-gray-700 dark:text-gray-300">{selectedLog.recipient}</span>
                                     </p>
+                                    {selectedLog.sender_email && (
+                                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                            {dict.inbox.sender}: <span className="font-mono">{selectedLog.sender_email}</span>
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <button onClick={() => setSelectedLog(null)} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full text-gray-500 transition-colors">

@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, PenSquare, FileText, History, Settings, Mail, ChevronLeft, ChevronRight, LogOut, ShieldAlert } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -56,7 +57,7 @@ export function Sidebar() {
       </button>
 
       <div className={clsx("flex h-16 items-center px-6 font-bold text-xl tracking-wider border-b border-[#79bbe0]/20 overflow-hidden", isCollapsed && "px-4")}>
-        <span className="text-[#79bbe0] mx-1">{dict.sidebar.brand_prefix}</span>
+        <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain mx-1" unoptimized />
         <span className={clsx("transition-opacity duration-300", isCollapsed ? "opacity-0 w-0" : "opacity-100")}>{dict.sidebar.brand_suffix}</span>
       </div>
 

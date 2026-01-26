@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import { accountManager } from '@/lib/account-manager';
 
 type AuthContextType = {
     user: User | null;
@@ -35,12 +36,21 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
             setSession(session);
             setUser(session?.user ?? null);
             setIsLoading(false);
+
+            if (session) {
+                accountManager.addAccount(session);
+            }
         };
+
 
         const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
             setIsLoading(false);
+
+            if (_event === 'SIGNED_IN' && session) {
+                accountManager.addAccount(session);
+            }
 
             if (_event === 'SIGNED_OUT') {
                 router.push('/login');
@@ -56,7 +66,8 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
     const signOut = async () => {
         await supabase.auth.signOut();
-        router.push('/login');
+        router.refresh();
+        window.location.href = '/login'; // Force full reload to clear any memory/cache
     };
 
     const value = {

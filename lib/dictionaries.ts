@@ -232,11 +232,15 @@ export const en = {
     login: {
         title: "Welcome Back",
         subtitle: "Sign in to your account",
+        add_account_subtitle: "Add another account",
         email_label: "Email Address",
         password_label: "Access Token",
         sign_in: "Sign In",
         signing_in: "Signing in...",
         error_creds: "Invalid credentials",
+        email_placeholder: "name@example.com",
+        password_placeholder: "••••••••",
+        error_generic: "Failed to sign in",
     },
     ai: {
         btn_generate: "Generate with AI",
@@ -255,6 +259,12 @@ export const en = {
         error_generic: "AI Error",
         hint_generate: "Describe the email you want to send. Mention recipients if you have them.",
         hint_refine: "How should I improve the current content? (e.g., \"Make it more professional\", \"Add a call to action\")"
+    },
+    header: {
+        current_account: "Current Account",
+        switch_to: "Switch to",
+        add_account: "Add Another Account",
+        no_other_accounts: "No other accounts added",
     }
 };
 
@@ -289,7 +299,7 @@ export const ar: Dictionary = {
         admin_users: "إدارة المستخدمين",
         platform_settings: "إعدادات المنصة",
         brand_prefix: "طلائع",
-        brand_suffix: "الركب",
+        brand_suffix: "نظام التسويق",
         inbox: "البريد الوارد",
     },
     inbox: {
@@ -490,11 +500,15 @@ export const ar: Dictionary = {
     login: {
         title: "مرحباً بعودتك",
         subtitle: "سجل الدخول لحسابك",
+        add_account_subtitle: "إضافة حساب آخر",
         email_label: "البريد الإلكتروني",
         password_label: "رمز الدخول",
         sign_in: "دخول",
         signing_in: "جاري الدخول...",
         error_creds: "بيانات الدخول غير صحيحة",
+        email_placeholder: "name@example.com",
+        password_placeholder: "••••••••",
+        error_generic: "فشل تسجيل الدخول",
     },
     ai: {
         btn_generate: "توليد بالذكاء الاصطناعي",
@@ -513,5 +527,11 @@ export const ar: Dictionary = {
         error_generic: "خطأ في الذكاء الاصطناعي",
         hint_generate: "صف الرسالة التي تريد إرسالها. اذكر المستلمين إن وجدوا.",
         hint_refine: "كيف تريد تحسين المحتوى الحالي؟ (مثال: اجعله أكثر رسمية)"
+    },
+    header: {
+        current_account: "الحساب الحالي",
+        switch_to: "التبديل إلى",
+        add_account: "إضافة حساب آخر",
+        no_other_accounts: "لا توجد حسابات أخرى مضافة",
     }
 };

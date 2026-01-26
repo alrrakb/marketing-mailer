@@ -8,6 +8,13 @@ import LanguageProvider from "@/components/providers/LanguageProvider";
 export const metadata: Metadata = {
   title: "ALRRAKB Mailer",
   description: "Professional Email Marketing System",
+  icons: {
+    icon: [
+      { url: '/favicon.png', href: '/favicon.png' },
+    ],
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
 
 import { Toaster } from 'sonner';
