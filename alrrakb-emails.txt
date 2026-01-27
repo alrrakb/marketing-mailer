@@ -50,6 +50,6 @@ support@rrakb.com: لخدمة العملاء وحل المشاكل التقني�
 💡 نصيحتي لك أثناء إعداد النظام الحالي:
 في مشروع الـ Marketing Mailer الخاص بنا، أنصحك بإعداد الإيميل التالي في إعدادات الـ SMTP:
 
-الاسم (Display Name): Tala'ea Al-Rakeb Offers (أو "عروض طلائع الركب")
+الاسم (Display Name): TALAE ALRRAKB Offers (أو "عروض طلائع الركب")
 الإيميل: offers@rrakb.com أو newsletter@rrakb.com
 هذا يعطي انطباعاً للعميل بأن هذه "نشرة عروض" مما يقلل احتمالية اعتبارها Spam.

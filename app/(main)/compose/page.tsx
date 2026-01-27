@@ -274,46 +274,46 @@ export default function ComposePage() {
                         <p className="text-gray-500 text-sm mt-1">{dict.compose.desc}</p>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
+                    <div className="grid grid-cols-2 gap-2 w-full md:flex md:w-auto md:gap-3">
                         <button
                             type="button"
                             onClick={() => openAIModal('generate')}
-                            className="flex-1 md:flex-none justify-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white border-0 rounded-lg font-bold transition-all flex items-center gap-2 shadow-md hover:shadow-lg text-sm"
+                            className="justify-center px-2 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white border-0 rounded-lg font-bold transition-all flex items-center gap-1.5 md:gap-2 shadow-md hover:shadow-lg text-[10px] md:text-sm"
                         >
-                            <Sparkles className="w-4 h-4 text-yellow-300" />
-                            <span className="hidden sm:inline">{dict.ai.btn_generate}</span>
+                            <Sparkles className="w-3 h-3 md:w-4 md:h-4 text-yellow-300" />
+                            <span className="truncate">{dict.ai.btn_generate}</span>
                         </button>
                         <button
                             type="button"
                             onClick={loadDrafts}
-                            className="flex-1 md:flex-none justify-center px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 font-medium transition-all flex items-center gap-2 shadow-sm text-sm"
+                            className="justify-center px-2 py-1.5 md:px-4 md:py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm text-[10px] md:text-sm"
                         >
-                            <FileText className="w-4 h-4 text-[#79bbe0]" />
-                            <span className="hidden sm:inline">{dict.compose.load_draft}</span>
+                            <FileText className="w-3 h-3 md:w-4 md:h-4 text-[#79bbe0]" />
+                            <span className="truncate">{dict.compose.load_draft}</span>
                         </button>
                         <button
                             type="button"
                             onClick={() => setIsPreviewOpen(true)}
-                            className="flex-1 md:flex-none justify-center px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 font-medium transition-all flex items-center gap-2 shadow-sm text-sm"
+                            className="justify-center px-2 py-1.5 md:px-4 md:py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm text-[10px] md:text-sm"
                         >
-                            <Eye className="w-4 h-4 text-[#79bbe0]" />
-                            <span className="hidden sm:inline">{dict.compose.preview}</span>
+                            <Eye className="w-3 h-3 md:w-4 md:h-4 text-[#79bbe0]" />
+                            <span className="truncate">{dict.compose.preview}</span>
                         </button>
                         <button
                             type="button"
                             onClick={saveDraft}
-                            className="flex-1 md:flex-none justify-center px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 font-medium transition-all flex items-center gap-2 shadow-sm text-sm"
+                            className="justify-center px-2 py-1.5 md:px-4 md:py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm text-[10px] md:text-sm"
                         >
-                            <Save className="w-4 h-4 text-[#79bbe0]" />
-                            <span className="hidden sm:inline">{dict.common.save}</span>
+                            <Save className="w-3 h-3 md:w-4 md:h-4 text-[#79bbe0]" />
+                            <span className="truncate">{dict.common.save}</span>
                         </button>
                         <button
                             form="compose-form"
                             type="submit"
                             disabled={isLoading}
-                            className="flex-1 md:flex-none justify-center px-6 py-2 bg-[#39285e] text-white rounded-lg font-bold hover:bg-[#2d1f4b] shadow-lg shadow-[#39285e]/20 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm whitespace-nowrap transform hover:scale-105 active:scale-95"
+                            className="col-span-2 md:col-span-auto justify-center px-6 py-2 bg-[#39285e] text-white rounded-lg font-bold hover:bg-[#2d1f4b] shadow-lg shadow-[#39285e]/20 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-xs md:text-sm whitespace-nowrap transform hover:scale-[1.02] active:scale-95 md:hover:scale-105"
                         >
-                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                            {isLoading ? <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" /> : <Send className="w-3.5 h-3.5 md:w-4 md:h-4" />}
                             {dict.compose.send_email}
                         </button>
                     </div>
@@ -331,33 +331,33 @@ export default function ComposePage() {
 
                 <form id="compose-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     {/* Metadata Card */}
-                    <div className="grid gap-6 bg-white dark:bg-gray-900/50 p-6 md:p-8 rounded-2xl shadow-md border-t-4 border-[#39285e] dark:border-[#79bbe0]">
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider text-xs">{dict.compose.recipients}</label>
+                    <div className="grid gap-4 md:gap-6 bg-white dark:bg-gray-900/50 p-4 md:p-8 rounded-2xl shadow-md border-t-4 border-[#39285e] dark:border-[#79bbe0]">
+                        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                            <div className="space-y-1.5 md:space-y-2">
+                                <label className="block font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider text-[10px] md:text-xs">{dict.compose.recipients}</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-gray-400" />
+                                        <Mail className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
                                     </div>
                                     <input
                                         {...register('recipients', { required: 'Recipients are required' })}
                                         type="text"
                                         placeholder={dict.compose.recipients_placeholder}
-                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#79bbe0] focus:border-transparent dark:text-white outline-none transition-all placeholder:text-gray-400"
+                                        className="w-full pl-9 md:pl-10 pr-4 py-2 md:py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#79bbe0] focus:border-transparent dark:text-white outline-none transition-all placeholder:text-gray-400 text-sm"
                                     />
                                 </div>
-                                {errors.recipients && <p className="text-red-500 text-sm">{errors.recipients.message}</p>}
+                                {errors.recipients && <p className="text-red-500 text-xs md:text-sm">{errors.recipients.message}</p>}
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider text-xs">{dict.compose.subject}</label>
+                            <div className="space-y-1.5 md:space-y-2">
+                                <label className="block font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider text-[10px] md:text-xs">{dict.compose.subject}</label>
                                 <input
                                     {...register('subject', { required: 'Subject is required' })}
                                     type="text"
                                     placeholder={dict.compose.subject_placeholder}
-                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#79bbe0] focus:border-transparent dark:text-white outline-none transition-all placeholder:text-gray-400"
+                                    className="w-full px-4 py-2 md:py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#79bbe0] focus:border-transparent dark:text-white outline-none transition-all placeholder:text-gray-400 text-sm"
                                 />
-                                {errors.subject && <p className="text-red-500 text-sm">{errors.subject.message}</p>}
+                                {errors.subject && <p className="text-red-500 text-xs md:text-sm">{errors.subject.message}</p>}
                             </div>
                         </div>
                     </div>

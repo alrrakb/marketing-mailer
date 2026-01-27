@@ -61,7 +61,7 @@ export const en = {
     },
     dashboard: {
         title: "Dashboard Overview",
-        welcome: "Welcome back to Tala'ea Al-Rakeb Mailer",
+        welcome: "Welcome back to TALAE ALRRAKB Mailer",
         total_sent: "Total Sent",
         successful: "Successful",
         failed: "Failed",

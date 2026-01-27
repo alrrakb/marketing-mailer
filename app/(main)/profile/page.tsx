@@ -102,19 +102,19 @@ export default function ProfilePage() {
             )}
 
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <div className="p-8 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col md:flex-row gap-6 md:items-center">
-                    <div className="h-24 w-24 rounded-full bg-gradient-to-br from-[#39285e] to-[#4f3882] dark:from-[#79bbe0] dark:to-[#4e9bc7] flex items-center justify-center text-white dark:text-[#39285e] text-3xl font-bold shadow-xl shadow-[#39285e]/20 ring-4 ring-white dark:ring-gray-800">
+                <div className="p-8 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col md:flex-row gap-6 items-center text-center md:text-start">
+                    <div className="h-24 w-24 rounded-full bg-gradient-to-br from-[#39285e] to-[#4f3882] dark:from-[#79bbe0] dark:to-[#4e9bc7] flex items-center justify-center text-white dark:text-[#39285e] text-3xl font-bold shadow-xl shadow-[#39285e]/20 ring-4 ring-white dark:ring-gray-800 shrink-0">
                         {user?.email?.[0].toUpperCase() || 'U'}
                     </div>
-                    <div>
+                    <div className="w-full">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white capitalize">
                             {formData.full_name || user?.email?.split('@')[0]}
                         </h2>
-                        <div className="flex items-center gap-2 mt-1 text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center justify-center md:justify-start gap-2 mt-1 text-gray-500 dark:text-gray-400">
                             <Mail className="w-4 h-4" />
                             <span>{user?.email}</span>
                         </div>
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
                             <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 text-xs font-semibold rounded-md border border-blue-100 dark:border-blue-800 uppercase tracking-wider">
                                 {user?.email === 'admin@rrakb.com' ? dict.common.admin : dict.common.team_member}
                             </span>
@@ -173,11 +173,11 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
+                    <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex flex-col md:flex-row justify-end">
                         <button
                             type="submit"
                             disabled={isSaving}
-                            className="bg-[#39285e] hover:bg-[#2d1f4b] text-white px-8 py-3 rounded-xl font-medium transition-all shadow-lg shadow-[#39285e]/20 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="bg-[#39285e] hover:bg-[#2d1f4b] text-white px-8 py-3 rounded-xl font-medium transition-all shadow-lg shadow-[#39285e]/20 flex items-center gap-2 justify-center disabled:opacity-70 disabled:cursor-not-allowed w-full md:w-auto"
                         >
                             {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                             {dict.profile.save_changes}

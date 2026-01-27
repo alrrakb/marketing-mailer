@@ -226,72 +226,126 @@ export default function InboxPage() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex-1 flex flex-col">
                 {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 p-8">
                         <InboxIcon className="w-12 h-12 mb-3 opacity-20" />
                         <p>{dict.inbox.no_messages}</p>
                     </div>
                 ) : (
                     <div className="overflow-auto flex-1">
-                        <table className="w-full text-start border-separate border-spacing-0">
-                            <thead className="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-medium sticky top-0 z-10 backdrop-blur-sm">
-                                <tr>
-                                    <th className="px-6 py-4 text-start w-1/4">{dict.inbox.sender}</th>
-                                    <th className="px-6 py-4 text-start w-1/3">{dict.inbox.subject}</th>
-                                    <th className="px-6 py-4 text-start">{dict.inbox.date}</th>
-                                    <th className="px-6 py-4 text-start">{dict.inbox.actions}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                                {messages.map(msg => (
-                                    <tr
-                                        key={msg.id}
-                                        className={`hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors cursor-pointer ${!msg.is_read ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}
-                                        onClick={() => openMessage(msg)}
-                                    >
-                                        <td className="px-6 py-4 max-w-xs truncate">
-                                            <div className={`font-medium ${!msg.is_read ? 'text-[#39285e] dark:text-[#79bbe0] font-bold' : 'text-gray-900 dark:text-white'}`}>
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block">
+                            <table className="w-full text-start border-separate border-spacing-0">
+                                <thead className="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-medium sticky top-0 z-10 backdrop-blur-sm">
+                                    <tr>
+                                        <th className="px-6 py-4 text-start w-1/4">{dict.inbox.sender}</th>
+                                        <th className="px-6 py-4 text-start w-1/3">{dict.inbox.subject}</th>
+                                        <th className="px-6 py-4 text-start">{dict.inbox.date}</th>
+                                        <th className="px-6 py-4 text-start">{dict.inbox.actions}</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                    {messages.map(msg => (
+                                        <tr
+                                            key={msg.id}
+                                            className={`hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors cursor-pointer ${!msg.is_read ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}
+                                            onClick={() => openMessage(msg)}
+                                        >
+                                            <td className="px-6 py-4 max-w-xs truncate">
+                                                <div className={`font-medium ${!msg.is_read ? 'text-[#39285e] dark:text-[#79bbe0] font-bold' : 'text-gray-900 dark:text-white'}`}>
+                                                    {msg.sender.split('<')[0]}
+                                                </div>
+                                                <div className="text-xs text-gray-400 truncate">{msg.sender}</div>
+                                            </td>
+                                            <td className="px-6 py-4 max-w-sm">
+                                                <div className={`${!msg.is_read ? 'font-bold' : ''} text-gray-800 dark:text-gray-200 truncate`}>
+                                                    {msg.subject}
+                                                </div>
+                                                {msg.tags && msg.tags.length > 0 && (
+                                                    <div className="flex gap-1 mt-1">
+                                                        {msg.tags.map(t => (
+                                                            <span key={t} className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-[10px] uppercase tracking-wider">
+                                                                {t}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                                {new Date(msg.received_at).toLocaleDateString()}
+                                                <span className="text-xs ml-1 opacity-70 block">
+                                                    {new Date(msg.received_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                                                <button
+                                                    onClick={() => openMessage(msg)}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(msg.id)}
+                                                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile Card List View */}
+                        <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
+                            {messages.map(msg => (
+                                <div
+                                    key={msg.id}
+                                    className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors cursor-pointer active:scale-[0.99] ${!msg.is_read ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}
+                                    onClick={() => openMessage(msg)}
+                                >
+                                    <div className="flex justify-between items-start mb-1">
+                                        <div className="flex-1 min-w-0">
+                                            <div className={`font-medium truncate ${!msg.is_read ? 'text-[#39285e] dark:text-[#79bbe0] font-bold' : 'text-gray-900 dark:text-white'}`}>
                                                 {msg.sender.split('<')[0]}
                                             </div>
                                             <div className="text-xs text-gray-400 truncate">{msg.sender}</div>
-                                        </td>
-                                        <td className="px-6 py-4 max-w-sm">
-                                            <div className={`${!msg.is_read ? 'font-bold' : ''} text-gray-800 dark:text-gray-200 truncate`}>
-                                                {msg.subject}
-                                            </div>
-                                            {msg.tags && msg.tags.length > 0 && (
-                                                <div className="flex gap-1 mt-1">
-                                                    {msg.tags.map(t => (
-                                                        <span key={t} className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-[10px] uppercase tracking-wider">
-                                                            {t}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                        </div>
+                                        <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
                                             {new Date(msg.received_at).toLocaleDateString()}
-                                            <span className="text-xs ml-1 opacity-70 block">
-                                                {new Date(msg.received_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                                        </span>
+                                    </div>
+
+                                    <div className={`text-sm mb-3 ${!msg.is_read ? 'font-bold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
+                                        {msg.subject}
+                                    </div>
+
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex gap-1 overflow-auto no-scrollbar mask-gradient">
+                                            {msg.tags && msg.tags.map(t => (
+                                                <span key={t} className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-[10px] uppercase tracking-wider whitespace-nowrap">
+                                                    {t}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                                             <button
                                                 onClick={() => openMessage(msg)}
-                                                className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                                className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                                             >
                                                 <Eye className="w-4 h-4" />
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(msg.id)}
-                                                className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>

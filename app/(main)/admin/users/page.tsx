@@ -243,8 +243,8 @@ export default function AdminUsersPage() {
                         </button>
                     </div>
                 ) : (
-                    <form onSubmit={handleCreateUser} className="flex gap-4 items-end">
-                        <div className="flex-1">
+                    <form onSubmit={handleCreateUser} className="flex flex-col md:flex-row gap-4 md:items-end">
+                        <div className="flex-1 w-full">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{dict.admin.email_address}</label>
                             <input
                                 type="email"
@@ -255,7 +255,7 @@ export default function AdminUsersPage() {
                                 className={`w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none ${dir === 'rtl' ? 'text-right' : 'text-left'}`}
                             />
                         </div>
-                        <button type="submit" disabled={isCreating} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                        <button type="submit" disabled={isCreating} className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
                             <Plus className="w-4 h-4" />
                             {dict.admin.generate_create}
                         </button>
@@ -264,8 +264,9 @@ export default function AdminUsersPage() {
             </div>
 
             {/* Users List */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <table className="w-full text-start">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden md:overflow-x-auto">
+                {/* Desktop Table */}
+                <table className="w-full text-start hidden md:table">
                     <thead className="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-medium">
                         <tr>
                             <th className="px-6 py-4 text-start">{dict.admin.users_table.user}</th>
@@ -335,231 +336,300 @@ export default function AdminUsersPage() {
                         })}
                     </tbody>
                 </table>
-            </div>
 
-            {/* Suspend Confirmation Modal */}
-            {userToSuspend && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-xl p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
-                        <div className={`flex items-center gap-3 mb-4 ${userToSuspend.action === 'suspend' ? 'text-orange-600' : 'text-green-600'}`}>
-                            {userToSuspend.action === 'suspend' ? <Ban className="w-6 h-6" /> : <CheckCircle className="w-6 h-6" />}
-                            <h3 className="text-lg font-bold capitalize">{dict.admin.confirm_}{userToSuspend.action === 'suspend' ? dict.admin.suspend_modal.suspend : dict.admin.suspend_modal.activate}</h3>
-                        </div>
-                        <p className="text-gray-600 dark:text-gray-300 mb-6">
-                            {userToSuspend.action === 'suspend'
-                                ? dict.admin.suspend_modal.desc_suspend
-                                : dict.admin.suspend_modal.desc_activate}
-                        </p>
-                        <div className="flex justify-end gap-3">
-                            <button onClick={() => setUserToSuspend(null)} className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
-                                {dict.common.cancel}
-                            </button>
-                            <button
-                                onClick={() => toggleUserStatus(userToSuspend.id, userToSuspend.action)}
-                                className={`px-4 py-2 rounded-lg text-white transition-colors font-medium shadow-lg ${userToSuspend.action === 'suspend' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-500/20' : 'bg-green-600 hover:bg-green-700 shadow-green-500/20'}`}
-                            >
-                                {dict.admin.suspend_modal.confirm}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Delete Confirmation Modal */}
-            {userToDelete && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-xl p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
-                        <div className="flex items-center gap-3 text-red-600 mb-4">
-                            <AlertTriangle className="w-6 h-6" />
-                            <h3 className="text-lg font-bold">{dict.admin.delete_modal.title}</h3>
-                        </div>
-                        <p className="text-gray-600 dark:text-gray-300 mb-6">
-                            {dict.admin.delete_modal.desc}
-                        </p>
-                        <div className="flex justify-end gap-3">
-                            <button onClick={() => setUserToDelete(null)} className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
-                                {dict.common.cancel}
-                            </button>
-                            <button onClick={() => handleDeleteUser(userToDelete)} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium shadow-lg shadow-red-500/20">
-                                {dict.admin.delete_modal.delete_user}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Logs Modal */}
-            {viewingLogsFor && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in" onClick={() => setViewingLogsFor(null)}>
-                    <div className="bg-white dark:bg-gray-900 w-full max-w-4xl max-h-[90vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-                        <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
-                            <h3 className="font-bold text-gray-900 dark:text-white">{dict.admin.activity_log} {viewingLogsFor}</h3>
-                            <button onClick={() => setViewingLogsFor(null)}><X className="w-5 h-5 text-gray-500" /></button>
-                        </div>
-                        <div className="flex-1 overflow-auto p-0">
-                            {isLoadingLogs ? (
-                                <div className="p-8 text-center">{dict.admin.loading_logs}</div>
-                            ) : userLogs.length === 0 ? (
-                                <div className="p-8 text-center text-gray-500">{dict.admin.no_activity}</div>
-                            ) : (
-                                <table className="w-full text-start text-sm">
-                                    <thead className="bg-gray-50 dark:bg-gray-700/30 sticky top-0">
-                                        <tr>
-                                            <th className="px-4 py-2 text-start">{dict.history.status}</th>
-                                            <th className="px-4 py-2 text-start">{dict.history.subject}</th>
-                                            <th className="px-4 py-2 text-start">{dict.history.recipient}</th>
-                                            <th className="px-4 py-2 text-start">{dict.history.time}</th>
-                                            <th className="px-4 py-2 text-end"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                        {userLogs.map(log => (
-                                            <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                                                <td className="px-4 py-2">
-                                                    <span className={`px-2 py-0.5 rounded textxs font-medium ${log.status === 'sent' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                        {log.status === 'sent' ? dict.history.sent : dict.history.failed}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-2 font-medium">{log.subject}</td>
-                                                <td className="px-4 py-2">{log.recipient}</td>
-                                                <td className="px-4 py-2 text-gray-500">{new Date(log.sent_at).toLocaleDateString()}</td>
-                                                <td className="px-4 py-2 text-end">
-                                                    <button onClick={() => setSelectedLog(log)} className="text-blue-600 hover:underline">{dict.common.view}</button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Email Detail Modal (Reused) */}
-            {selectedLog && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setSelectedLog(null)}>
-                    <div className="bg-white dark:bg-gray-900 w-full max-w-2xl max-h-[80vh] rounded-xl flex flex-col shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-                        <div className="p-4 border-b flex justify-between">
-                            <h4 className="font-bold">{selectedLog.subject}</h4>
-                            <button onClick={() => setSelectedLog(null)}><X className="w-5 h-5" /></button>
-                        </div>
-                        <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-950 p-4">
-                            {selectedLog.content ? (
-                                <iframe srcDoc={selectedLog.content} className="w-full h-full min-h-[400px] bg-white rounded-lg" />
-                            ) : (
-                                <p className="text-center text-gray-500 mt-10">{dict.admin.no_content}</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-            {/* User Details Modal */}
-            {viewingDetailsFor && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in" onClick={() => setViewingDetailsFor(null)}>
-                    <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-xl p-6 shadow-2xl border border-gray-200 dark:border-gray-800" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-start mb-6">
-                            <h3 className="text-xl font-bold text-[#39285e] dark:text-white flex items-center gap-2">
-                                <User className="w-6 h-6" /> {dict.admin.user_profile}
-                            </h3>
-                            <button onClick={() => setViewingDetailsFor(null)}><X className="w-5 h-5 text-gray-500" /></button>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                <div className="h-12 w-12 rounded-full bg-[#39285e] text-white flex items-center justify-center font-bold text-xl">
-                                    {viewingDetailsFor.email[0].toUpperCase()}
+                {/* Mobile Card View */}
+                <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
+                    {users.map(u => {
+                        const isBanned = u.banned_until && new Date(u.banned_until) > new Date();
+                        return (
+                            <div key={u.id} className="p-4 flex flex-col gap-3">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <div className="font-bold text-gray-900 dark:text-white">{u.email}</div>
+                                        <div className="text-[10px] text-gray-400 font-mono mt-0.5">{u.id}</div>
+                                    </div>
+                                    {isBanned ? (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300 border border-red-200 dark:border-red-800">
+                                            {dict.profile.suspended}
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300 border border-green-200 dark:border-green-800">
+                                            {dict.profile.active}
+                                        </span>
+                                    )}
                                 </div>
-                                <div>
-                                    <p className="font-bold text-lg dark:text-white">{viewingDetailsFor.profile?.full_name || dict.admin.no_name}</p>
-                                    <p className="text-sm text-gray-500">{viewingDetailsFor.email}</p>
+
+                                <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/30 p-2 rounded-lg">
+                                    <div className="flex flex-col">
+                                        <span className="uppercase text-[10px] text-gray-400">{dict.admin.users_table.created}</span>
+                                        <span>{new Date(u.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="uppercase text-[10px] text-gray-400">{dict.admin.users_table.last_login}</span>
+                                        <span>{u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString() : dict.admin.never}</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                    <div className="flex gap-2">
+                                        {u.email !== 'admin@rrakb.com' && (
+                                            <>
+                                                <button onClick={() => setViewingDetailsFor(u)} className="p-2 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 rounded-lg" title={dict.common.view}>
+                                                    <User className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setUserToSuspend({ id: u.id, action: isBanned ? 'activate' : 'suspend' })}
+                                                    className={`p-2 rounded-lg ${isBanned
+                                                        ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+                                                        : 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'}`}
+                                                    title={isBanned ? dict.admin.suspend_modal.activate : dict.admin.suspend_modal.suspend}
+                                                >
+                                                    {isBanned ? <CheckCircle className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+                                                </button>
+                                                <button onClick={() => setRegeneratingFor(u)} className="p-2 bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400 rounded-lg" title={dict.admin.regenerate_modal.title}>
+                                                    <History className={`w-4 h-4 ${dir === 'rtl' ? '' : 'rotate-180'}`} />
+                                                </button>
+                                            </>
+                                        )}
+                                        <button onClick={() => handleViewLogs(u.email)} className="p-2 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 rounded-lg" title={dict.history.title}>
+                                            <History className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                    {u.email !== 'admin@rrakb.com' && (
+                                        <button onClick={() => setUserToDelete(u.id)} className="p-2 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 rounded-lg" title={dict.common.delete}>
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
+                        );
+                    })}
+                </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-3 border border-gray-100 dark:border-gray-700 rounded-lg">
-                                    <p className="text-xs text-gray-500 uppercase">{dict.profile.role}</p>
-                                    <p className="font-medium dark:text-gray-200">{viewingDetailsFor.profile?.role || '-'}</p>
+                {/* Suspend Confirmation Modal */}
+                {userToSuspend && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
+                        <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-xl p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
+                            <div className={`flex items-center gap-3 mb-4 ${userToSuspend.action === 'suspend' ? 'text-orange-600' : 'text-green-600'}`}>
+                                {userToSuspend.action === 'suspend' ? <Ban className="w-6 h-6" /> : <CheckCircle className="w-6 h-6" />}
+                                <h3 className="text-lg font-bold capitalize">{dict.admin.confirm_}{userToSuspend.action === 'suspend' ? dict.admin.suspend_modal.suspend : dict.admin.suspend_modal.activate}</h3>
+                            </div>
+                            <p className="text-gray-600 dark:text-gray-300 mb-6">
+                                {userToSuspend.action === 'suspend'
+                                    ? dict.admin.suspend_modal.desc_suspend
+                                    : dict.admin.suspend_modal.desc_activate}
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button onClick={() => setUserToSuspend(null)} className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
+                                    {dict.common.cancel}
+                                </button>
+                                <button
+                                    onClick={() => toggleUserStatus(userToSuspend.id, userToSuspend.action)}
+                                    className={`px-4 py-2 rounded-lg text-white transition-colors font-medium shadow-lg ${userToSuspend.action === 'suspend' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-500/20' : 'bg-green-600 hover:bg-green-700 shadow-green-500/20'}`}
+                                >
+                                    {dict.admin.suspend_modal.confirm}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Delete Confirmation Modal */}
+                {userToDelete && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
+                        <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-xl p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
+                            <div className="flex items-center gap-3 text-red-600 mb-4">
+                                <AlertTriangle className="w-6 h-6" />
+                                <h3 className="text-lg font-bold">{dict.admin.delete_modal.title}</h3>
+                            </div>
+                            <p className="text-gray-600 dark:text-gray-300 mb-6">
+                                {dict.admin.delete_modal.desc}
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button onClick={() => setUserToDelete(null)} className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
+                                    {dict.common.cancel}
+                                </button>
+                                <button onClick={() => handleDeleteUser(userToDelete)} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium shadow-lg shadow-red-500/20">
+                                    {dict.admin.delete_modal.delete_user}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Logs Modal */}
+                {viewingLogsFor && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in" onClick={() => setViewingLogsFor(null)}>
+                        <div className="bg-white dark:bg-gray-900 w-full max-w-4xl max-h-[90vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+                                <h3 className="font-bold text-gray-900 dark:text-white">{dict.admin.activity_log} {viewingLogsFor}</h3>
+                                <button onClick={() => setViewingLogsFor(null)}><X className="w-5 h-5 text-gray-500" /></button>
+                            </div>
+                            <div className="flex-1 overflow-auto p-0">
+                                {isLoadingLogs ? (
+                                    <div className="p-8 text-center">{dict.admin.loading_logs}</div>
+                                ) : userLogs.length === 0 ? (
+                                    <div className="p-8 text-center text-gray-500">{dict.admin.no_activity}</div>
+                                ) : (
+                                    <table className="w-full text-start text-sm">
+                                        <thead className="bg-gray-50 dark:bg-gray-700/30 sticky top-0">
+                                            <tr>
+                                                <th className="px-4 py-2 text-start">{dict.history.status}</th>
+                                                <th className="px-4 py-2 text-start">{dict.history.subject}</th>
+                                                <th className="px-4 py-2 text-start">{dict.history.recipient}</th>
+                                                <th className="px-4 py-2 text-start">{dict.history.time}</th>
+                                                <th className="px-4 py-2 text-end"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                            {userLogs.map(log => (
+                                                <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                                                    <td className="px-4 py-2">
+                                                        <span className={`px-2 py-0.5 rounded textxs font-medium ${log.status === 'sent' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                            {log.status === 'sent' ? dict.history.sent : dict.history.failed}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-2 font-medium">{log.subject}</td>
+                                                    <td className="px-4 py-2">{log.recipient}</td>
+                                                    <td className="px-4 py-2 text-gray-500">{new Date(log.sent_at).toLocaleDateString()}</td>
+                                                    <td className="px-4 py-2 text-end">
+                                                        <button onClick={() => setSelectedLog(log)} className="text-blue-600 hover:underline">{dict.common.view}</button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Email Detail Modal (Reused) */}
+                {selectedLog && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setSelectedLog(null)}>
+                        <div className="bg-white dark:bg-gray-900 w-full max-w-2xl max-h-[80vh] rounded-xl flex flex-col shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                            <div className="p-4 border-b flex justify-between">
+                                <h4 className="font-bold">{selectedLog.subject}</h4>
+                                <button onClick={() => setSelectedLog(null)}><X className="w-5 h-5" /></button>
+                            </div>
+                            <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-950 p-4">
+                                {selectedLog.content ? (
+                                    <iframe srcDoc={selectedLog.content} className="w-full h-full min-h-[400px] bg-white rounded-lg" />
+                                ) : (
+                                    <p className="text-center text-gray-500 mt-10">{dict.admin.no_content}</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {/* User Details Modal */}
+                {viewingDetailsFor && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in" onClick={() => setViewingDetailsFor(null)}>
+                        <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-xl p-6 shadow-2xl border border-gray-200 dark:border-gray-800" onClick={e => e.stopPropagation()}>
+                            <div className="flex justify-between items-start mb-6">
+                                <h3 className="text-xl font-bold text-[#39285e] dark:text-white flex items-center gap-2">
+                                    <User className="w-6 h-6" /> {dict.admin.user_profile}
+                                </h3>
+                                <button onClick={() => setViewingDetailsFor(null)}><X className="w-5 h-5 text-gray-500" /></button>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <div className="h-12 w-12 rounded-full bg-[#39285e] text-white flex items-center justify-center font-bold text-xl">
+                                        {viewingDetailsFor.email[0].toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-lg dark:text-white">{viewingDetailsFor.profile?.full_name || dict.admin.no_name}</p>
+                                        <p className="text-sm text-gray-500">{viewingDetailsFor.email}</p>
+                                    </div>
                                 </div>
-                                <div className="p-3 border border-gray-100 dark:border-gray-700 rounded-lg">
-                                    <p className="text-xs text-gray-500 uppercase">{dict.profile.phone}</p>
-                                    <p className="font-medium dark:text-gray-200">{viewingDetailsFor.profile?.phone || '-'}</p>
-                                </div>
-                                <div className="p-3 border border-gray-100 dark:border-gray-700 rounded-lg">
-                                    <p className="text-xs text-gray-500 uppercase">{dict.profile.status}</p>
-                                    <p className="font-medium dark:text-gray-200">
-                                        {viewingDetailsFor.banned_until && new Date(viewingDetailsFor.banned_until) > new Date() ? dict.profile.suspended : dict.profile.active}
-                                    </p>
-                                </div>
-                                <div className="p-3 border border-gray-100 dark:border-gray-700 rounded-lg">
-                                    <p className="text-xs text-gray-500 uppercase">{dict.profile.user_id}</p>
-                                    <div className="flex items-center justify-between gap-2">
-                                        <p className="font-mono text-xs dark:text-gray-200 truncate flex-1" title={viewingDetailsFor.id}>
-                                            {viewingDetailsFor.id}
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-3 border border-gray-100 dark:border-gray-700 rounded-lg">
+                                        <p className="text-xs text-gray-500 uppercase">{dict.profile.role}</p>
+                                        <p className="font-medium dark:text-gray-200">{viewingDetailsFor.profile?.role || '-'}</p>
+                                    </div>
+                                    <div className="p-3 border border-gray-100 dark:border-gray-700 rounded-lg">
+                                        <p className="text-xs text-gray-500 uppercase">{dict.profile.phone}</p>
+                                        <p className="font-medium dark:text-gray-200">{viewingDetailsFor.profile?.phone || '-'}</p>
+                                    </div>
+                                    <div className="p-3 border border-gray-100 dark:border-gray-700 rounded-lg">
+                                        <p className="text-xs text-gray-500 uppercase">{dict.profile.status}</p>
+                                        <p className="font-medium dark:text-gray-200">
+                                            {viewingDetailsFor.banned_until && new Date(viewingDetailsFor.banned_until) > new Date() ? dict.profile.suspended : dict.profile.active}
                                         </p>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigator.clipboard.writeText(viewingDetailsFor.id);
-                                                showToast('success', dict.common.user_id_copied);
-                                            }}
-                                            className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
-                                            title={dict.admin.copy_id}
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
-                                        </button>
+                                    </div>
+                                    <div className="p-3 border border-gray-100 dark:border-gray-700 rounded-lg">
+                                        <p className="text-xs text-gray-500 uppercase">{dict.profile.user_id}</p>
+                                        <div className="flex items-center justify-between gap-2">
+                                            <p className="font-mono text-xs dark:text-gray-200 truncate flex-1" title={viewingDetailsFor.id}>
+                                                {viewingDetailsFor.id}
+                                            </p>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigator.clipboard.writeText(viewingDetailsFor.id);
+                                                    showToast('success', dict.common.user_id_copied);
+                                                }}
+                                                className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                                                title={dict.admin.copy_id}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Regenerate Token Confirmation */}
-            {regeneratingFor && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-xl p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
-                        <div className="flex items-center gap-3 text-purple-600 mb-4">
-                            <History className="w-6 h-6 rotate-180" />
-                            <h3 className="text-lg font-bold">{dict.admin.regenerate_modal.title}</h3>
-                        </div>
-                        <p className="text-gray-600 dark:text-gray-300 mb-6">
-                            {dict.admin.regenerate_modal.desc}
-                        </p>
-                        <div className="flex justify-end gap-3">
-                            <button onClick={() => setRegeneratingFor(null)} className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
-                                {dict.common.cancel}
-                            </button>
-                            <button onClick={handleRegenerateToken} className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors font-medium shadow-lg shadow-purple-500/20">
-                                {dict.admin.regenerate_modal.confirm}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Regenerated Token Success Modal */}
-            {regeneratedToken && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-xl p-6 shadow-2xl border border-green-200 dark:border-green-900">
-                        <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <CheckCircle className="w-8 h-8" />
+                {/* Regenerate Token Confirmation */}
+                {regeneratingFor && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
+                        <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-xl p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
+                            <div className="flex items-center gap-3 text-purple-600 mb-4">
+                                <History className="w-6 h-6 rotate-180" />
+                                <h3 className="text-lg font-bold">{dict.admin.regenerate_modal.title}</h3>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{dict.admin.regenerate_modal.success}</h3>
-                            <p className="text-gray-500 mt-2">{dict.admin.please_copy}</p>
+                            <p className="text-gray-600 dark:text-gray-300 mb-6">
+                                {dict.admin.regenerate_modal.desc}
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button onClick={() => setRegeneratingFor(null)} className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
+                                    {dict.common.cancel}
+                                </button>
+                                <button onClick={handleRegenerateToken} className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors font-medium shadow-lg shadow-purple-500/20">
+                                    {dict.admin.regenerate_modal.confirm}
+                                </button>
+                            </div>
                         </div>
-
-                        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg font-mono text-lg font-bold text-center tracking-widest text-gray-800 dark:text-white mb-6 select-all border border-gray-200 dark:border-gray-700">
-                            {regeneratedToken.token}
-                        </div>
-
-                        <button onClick={() => setRegeneratedToken(null)} className="w-full py-3 bg-gray-900 dark:bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors">
-                            {dict.admin.regenerate_modal.done}
-                        </button>
                     </div>
-                </div>
-            )}
+                )}
+
+                {/* Regenerated Token Success Modal */}
+                {regeneratedToken && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
+                        <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-xl p-6 shadow-2xl border border-green-200 dark:border-green-900">
+                            <div className="text-center mb-6">
+                                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <CheckCircle className="w-8 h-8" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{dict.admin.regenerate_modal.success}</h3>
+                                <p className="text-gray-500 mt-2">{dict.admin.please_copy}</p>
+                            </div>
+
+                            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg font-mono text-lg font-bold text-center tracking-widest text-gray-800 dark:text-white mb-6 select-all border border-gray-200 dark:border-gray-700">
+                                {regeneratedToken.token}
+                            </div>
+
+                            <button onClick={() => setRegeneratedToken(null)} className="w-full py-3 bg-gray-900 dark:bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors">
+                                {dict.admin.regenerate_modal.done}
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

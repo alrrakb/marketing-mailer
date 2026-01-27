@@ -135,28 +135,28 @@ export default function AdminSettingsPage() {
                         <h2 className="font-semibold text-gray-900 dark:text-white">{dict.settings.emergency}</h2>
                     </div>
                     <div className="p-6 space-y-6">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
                                 <h3 className="font-medium text-gray-900 dark:text-white">{dict.settings.global_suspend}</h3>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">{dict.settings.global_suspend_desc}</p>
                             </div>
                             <button
                                 onClick={() => setConfirmSuspend(true)}
-                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-lg shadow-red-500/20"
+                                className="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors shadow-lg shadow-red-500/20"
                             >
                                 <Power className="w-4 h-4" />
                                 {dict.settings.suspend_all}
                             </button>
                         </div>
 
-                        <div className="border-t border-gray-100 dark:border-gray-700 pt-6 flex items-center justify-between">
+                        <div className="border-t border-gray-100 dark:border-gray-700 pt-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
                                 <h3 className="font-medium text-gray-900 dark:text-white">{dict.settings.system_reactivation}</h3>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">{dict.settings.system_reactivation_desc}</p>
                             </div>
                             <button
                                 onClick={() => setConfirmSuspend(false)}
-                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-lg shadow-green-500/20"
+                                className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors shadow-lg shadow-green-500/20"
                             >
                                 <RotateCcw className="w-4 h-4" />
                                 {dict.settings.activate_all}
@@ -171,14 +171,14 @@ export default function AdminSettingsPage() {
                         <Trash2 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                         <h2 className="font-semibold text-gray-900 dark:text-white">{dict.settings.maintenance}</h2>
                     </div>
-                    <div className="p-6 flex items-center justify-between">
+                    <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <h3 className="font-medium text-gray-900 dark:text-white">{dict.settings.clear_cache}</h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400">{dict.settings.clear_cache_desc}</p>
                         </div>
                         <button
                             onClick={() => setConfirmClearDrafts(true)}
-                            className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                            className="w-full md:w-auto border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
                         >
                             <Trash2 className="w-4 h-4" />
                             {dict.settings.clear_cache_btn}
@@ -194,18 +194,18 @@ export default function AdminSettingsPage() {
                     </div>
                     <div className="p-6">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{dict.settings.smtp_pass}</label>
-                        <div className="flex gap-4">
+                        <div className="flex flex-col md:flex-row gap-4">
                             <input
                                 type="text"
                                 value={smtpPassword}
                                 onChange={(e) => setSmtpPassword(e.target.value)}
-                                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#79bbe0] outline-none"
+                                className="w-full md:flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#79bbe0] outline-none"
                                 placeholder={dict.settings.smtp_placeholder}
                             />
                             <button
                                 onClick={handleUpdateSmtp}
                                 disabled={isSavingSmtp}
-                                className="bg-[#39285e] hover:bg-[#2d1f4b] text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg shadow-[#39285e]/20"
+                                className="w-full md:w-auto bg-[#39285e] hover:bg-[#2d1f4b] text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#39285e]/20"
                             >
                                 <Save className="w-4 h-4" />
                                 {isSavingSmtp ? dict.settings.saving : dict.settings.update}

@@ -95,8 +95,10 @@ export default function HistoryPage() {
                         <Link href="/dashboard" className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400 transition-colors md:hidden">
                             <ArrowLeft className={`w-5 h-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
                         </Link>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <HistoryIcon className="w-8 h-8 text-blue-500" />
+                        <h1 className="text-3xl font-bold text-[#39285e] dark:text-white flex items-center gap-3">
+                            <div className="bg-[#39285e]/10 p-2 rounded-lg text-[#39285e] dark:bg-[#79bbe0]/10 dark:text-[#79bbe0]">
+                                <HistoryIcon className="w-6 h-6" />
+                            </div>
                             {dict.history.title}
                         </h1>
                     </div>
@@ -200,11 +202,11 @@ export default function HistoryPage() {
                         >
                             <div className="flex justify-between items-start mb-3">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold uppercase">
+                                    <div className="hidden w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 items-center justify-center text-xs font-bold uppercase">
                                         {log.recipient.charAt(0)}
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1">{log.subject || '(No Subject)'}</h3>
+                                        <h3 className="font-bold text-[#39285e] dark:text-[#79bbe0] text-sm line-clamp-1">{log.subject || '(No Subject)'}</h3>
                                         <p className="text-xs text-gray-500 dark:text-gray-400">{log.recipient}</p>
                                     </div>
                                 </div>

@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import { accountManager, StoredAccount } from '@/lib/account-manager';
 import { supabase } from '@/lib/supabase';
-import { X, User } from 'lucide-react';
+import { X, User, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/components/providers/LanguageProvider';
 
 export default function QuickLoginList() {
     const [savedAccounts, setSavedAccounts] = useState<StoredAccount[]>([]);
+    const [notification, setNotification] = useState<{ type: 'error' | 'success', message: string } | null>(null);
     const { dict } = useLanguage();
 
     useEffect(() => {
@@ -21,10 +22,11 @@ export default function QuickLoginList() {
         });
 
         if (error) {
-            alert(dict.login?.session_expired || "Session expired. Please sign in again.");
-            // If expired, maybe remove from quick login?
-            // accountManager.removeAccount(account.email); // or unmark?
-            // setSavedAccounts(accountManager.getSavedAccounts());
+            setNotification({
+                type: 'error',
+                message: dict.login?.session_expired || "Session expired. Please sign in again."
+            });
+            setTimeout(() => setNotification(null), 4000);
             return;
         }
 
@@ -51,6 +53,16 @@ export default function QuickLoginList() {
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 text-center">
                 {dict.login?.quick_login_title || "Quick Login"}
             </h3>
+
+            {notification && (
+                <div className={`mb-3 p-3 rounded-lg flex items-center gap-2 text-sm font-medium animate-in fade-in slide-in-from-top-2 ${notification.type === 'error'
+                    ? 'bg-red-50 text-red-600 border border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
+                    : 'bg-green-50 text-green-600'
+                    }`}>
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    {notification.message}
+                </div>
+            )}
 
             <div className="grid grid-cols-1 gap-2 max-h-[260px] overflow-y-auto pr-1">
                 {savedAccounts.map((account) => (
