@@ -116,11 +116,11 @@ export function Header({ title }: { title?: string }) {
 
                             {/* Other Accounts */}
                             <div className="max-h-60 overflow-y-auto py-2">
-                                {accounts.filter(a => a.email !== user?.email).length > 0 && (
+                                {accounts.filter(a => a.email !== user?.email && a.isSaved).length > 0 && (
                                     <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">{dict.header?.switch_to || 'Switch to'}</p>
                                 )}
 
-                                {accounts.filter(a => a.email !== user?.email).map((acc) => (
+                                {accounts.filter(a => a.email !== user?.email && a.isSaved).map((acc) => (
                                     <button
                                         key={acc.email}
                                         onClick={() => handleSwitchAccount(acc)}
@@ -138,7 +138,7 @@ export function Header({ title }: { title?: string }) {
                                     </button>
                                 ))}
 
-                                {accounts.filter(a => a.email !== user?.email).length === 0 && (
+                                {accounts.filter(a => a.email !== user?.email && a.isSaved).length === 0 && (
                                     <div className="px-4 py-3 text-center text-sm text-gray-400 italic">
                                         {dict.header?.no_other_accounts || 'No other accounts added'}
                                     </div>

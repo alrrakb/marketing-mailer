@@ -41,6 +41,7 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess }: AddAccou
                 // We keep the current session active, or switch?
                 // Usually "Add Account" implies adding it to the list but not necessarily switching immediately,
                 // OR switching immediately. Let's switch immediately as typical behavior.
+                sessionStorage.setItem('prompt_save_after_reload', 'true');
                 window.location.reload(); // Hard reload to pick up new session if we force it? 
                 // Actually, wait. signInWithPassword sets the Supabase client session.
                 // So calling it here WILL switch the active session effectively.
@@ -58,7 +59,7 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess }: AddAccou
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-gray-900 w-full max-w-md p-6 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 relative animate-in zoom-in-95 duration-200">
+            <div className="bg-white dark:bg-gray-900 w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 relative animate-in zoom-in-95 duration-200">
                 <button
                     onClick={onClose}
                     className={`absolute top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors ${dir === 'rtl' ? 'left-4' : 'right-4'}`}
@@ -69,36 +70,36 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess }: AddAccou
                 <h2 className="text-xl font-bold mb-1 text-gray-900 dark:text-white">{dict.login?.sign_in || "Sign In"}</h2>
                 <p className="text-sm text-gray-500 mb-6">{dict.login?.add_account_subtitle || "Add another account"}</p>
 
-                <form className="space-y-4" onSubmit={handleLogin}>
+                <form className="space-y-5" onSubmit={handleLogin}>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                             {dict.login?.email_label || "Email Address"}
                         </label>
                         <div className="relative">
-                            <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                            <Mail className={`absolute top-2.5 h-5 w-5 text-gray-400 ${dir === 'rtl' ? 'right-3' : 'left-3'}`} />
                             <input
                                 type="email"
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="pl-10 w-full py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                className={`w-full py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none ${dir === 'rtl' ? 'pr-10' : 'pl-10'}`}
                                 placeholder={dict.login?.email_placeholder || "name@example.com"}
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                             {dict.login?.password_label || "Password"}
                         </label>
                         <div className="relative">
-                            <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                            <Lock className={`absolute top-2.5 h-5 w-5 text-gray-400 ${dir === 'rtl' ? 'right-3' : 'left-3'}`} />
                             <input
                                 type="password"
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="pl-10 w-full py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                className={`w-full py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none ${dir === 'rtl' ? 'pr-10' : 'pl-10'}`}
                                 placeholder={dict.login?.password_placeholder || "••••••••"}
                             />
                         </div>

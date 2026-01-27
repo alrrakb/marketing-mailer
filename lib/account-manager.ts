@@ -8,6 +8,7 @@ export interface StoredAccount {
     full_name?: string;
     session: Session;
     last_active: number;
+    isSaved?: boolean;
 }
 
 export const accountManager = {
@@ -34,6 +35,7 @@ export const accountManager = {
             full_name: session.user.user_metadata.full_name,
             session: session,
             last_active: Date.now(),
+            isSaved: existingIndex >= 0 ? accounts[existingIndex].isSaved : false,
         };
 
         if (existingIndex >= 0) {
@@ -45,11 +47,7 @@ export const accountManager = {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
     },
 
-    removeAccount: (email: string) => {
-        if (typeof window === 'undefined') return;
-        const accounts = accountManager.getAccounts().filter(a => a.email !== email);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
-    },
+
 
     updateLastActive: (email: string) => {
         if (typeof window === 'undefined') return;
@@ -59,5 +57,26 @@ export const accountManager = {
             accounts[index].last_active = Date.now();
             localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
         }
+    },
+
+    markAsSaved: (email: string) => {
+        if (typeof window === 'undefined') return;
+        const accounts = accountManager.getAccounts();
+        const index = accounts.findIndex(a => a.email === email);
+        if (index >= 0) {
+            accounts[index].isSaved = true;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
+        }
+    },
+
+    getSavedAccounts: (): StoredAccount[] => {
+        return accountManager.getAccounts().filter(a => a.isSaved);
+    },
+
+    removeAccount: (email: string) => {
+        if (typeof window === 'undefined') return;
+        // If removing completely (e.g. from the list), we delete it from storage
+        const accounts = accountManager.getAccounts().filter(a => a.email !== email);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
     }
 };
