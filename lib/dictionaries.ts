@@ -195,6 +195,7 @@ export const en = {
         confirm_delete: "Are you sure?",
         delete_title: "Delete Hotel",
         delete_hotel: "Delete Hotel",
+        delete_confirm: "Delete",
 
     },
     admin: {
@@ -530,6 +531,7 @@ export const ar: Dictionary = {
         confirm_delete: "هل أنت متأكد؟",
         delete_title: "حذف الفندق",
         delete_hotel: "حذف الفندق",
+        delete_confirm: "حذف",
 
     },
     admin: {
