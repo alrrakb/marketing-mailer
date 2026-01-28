@@ -41,12 +41,20 @@ const Toolbar = ({ editor, onImageClick, onRefineClick }: { editor: any, onImage
 
     const updateBlockAttributes = (attributes: Record<string, any>) => {
         const { selection } = editor.state;
-        // ... (existing logic)
-        editor.chain().focus()
-            .updateAttributes('paragraph', attributes)
-            .updateAttributes('heading', attributes)
-            .setMeta('skipAutoDir', true)
-            .run();
+        // Check if we are in a list
+        if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
+            editor.chain().focus()
+                .updateAttributes('bulletList', attributes)
+                .updateAttributes('orderedList', attributes)
+                .setMeta('skipAutoDir', true)
+                .run();
+        } else {
+            editor.chain().focus()
+                .updateAttributes('paragraph', attributes)
+                .updateAttributes('heading', attributes)
+                .setMeta('skipAutoDir', true)
+                .run();
+        }
     };
 
     const setDirection = (dir: 'rtl' | 'ltr') => {
@@ -242,7 +250,7 @@ const AutoDirection = Extension.create({
     addGlobalAttributes() {
         return [
             {
-                types: ['heading', 'paragraph'],
+                types: ['heading', 'paragraph', 'bulletList', 'orderedList', 'listItem'],
                 attributes: {
                     dir: {
                         default: 'auto',
@@ -352,14 +360,25 @@ export default function Editor({ value, onChange, onRefine }: EditorProps) {
             // Only run auto-detection if NOT skipped manually
             if (!transaction.getMeta('skipAutoDir')) {
                 editor.state.doc.descendants((node, pos) => {
-                    if (node.isTextblock && node.content.size > 0) {
-                        const text = node.textContent;
-                        const isArabic = /^\s*[\u0600-\u06FF]/.test(text);
+                    const isList = node.type.name === 'bulletList' || node.type.name === 'orderedList';
+
+                    if ((node.isTextblock && node.content.size > 0) || isList) {
+                        // For lists, we might need to check its children content or just rely on the first child
+                        let text = "";
+                        if (isList) {
+                            node.content.forEach((child) => {
+                                text += child.textContent + " ";
+                            });
+                        } else {
+                            text = node.textContent;
+                        }
+
+                        const isArabic = /[\u0600-\u06FF]/.test(text.trim().substring(0, 100)); // Check first 100 chars
                         const newDir = isArabic ? 'rtl' : 'ltr';
                         const newAlign = isArabic ? 'right' : 'left';
 
-                        if (node.attrs.dir !== newDir || node.attrs.textAlign !== newAlign) {
-                            tr.setNodeMarkup(pos, undefined, { ...node.attrs, dir: newDir, textAlign: newAlign });
+                        if (node.attrs.dir !== newDir && ((node.isTextblock && node.content.size > 0) || (isList && text.trim().length > 0))) {
+                            tr.setNodeMarkup(pos, undefined, { ...node.attrs, dir: newDir, textAlign: isList ? undefined : newAlign }); // Lists often don't have textAlign, but dir is key
                             modified = true;
                         }
                     }
@@ -430,6 +449,30 @@ export default function Editor({ value, onChange, onRefine }: EditorProps) {
                 }
                 .ProseMirror ol {
                     list-style-type: decimal;
+                }
+                /* Specialized RTL List Handling */
+                .ProseMirror [dir="rtl"] {
+                     direction: rtl;
+                     text-align: right;
+                }
+                /* Ensure lists inherit direction or are explicitly set */
+                .ProseMirror ul[dir="rtl"], .ProseMirror ol[dir="rtl"] {
+                    margin-right: 1.5em;
+                    margin-left: 0;
+                    padding-right: 0;
+                    padding-inline-start: 1.5em; /* Logical property as backup */
+                    list-style-position: outside;
+                }
+                /* Fix for list items inside RTL block if parent isn't explicitly RTL list */
+                .ProseMirror [dir="rtl"] ul, .ProseMirror [dir="rtl"] ol {
+                    direction: rtl;
+                    text-align: right;
+                    margin-right: 1.5em;
+                    margin-left: 0;
+                }
+                .ProseMirror [dir="rtl"] li {
+                    direction: rtl;
+                    text-align: right;
                 }
             `}</style>
         </div>

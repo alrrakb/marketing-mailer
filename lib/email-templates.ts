@@ -1,6 +1,6 @@
 
 
-export function getBaseEmailHtml(content: string, title: string = 'Update from Tala\'ea Al-Rakeb') {
+export function getBaseEmailHtml(content: string, title: string = 'Update from Tala\'ea Al-Rakeb', showDate: boolean = true) {
   const today = new Date();
   // Format date as yyyy/mm/dd
   const dateStr = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
@@ -9,6 +9,31 @@ export function getBaseEmailHtml(content: string, title: string = 'Update from T
 
   // Extract the background image URL from the user's template or use the one provided
   const bgImage = "https://fsmazqlpismmfdddpyqe.supabase.co/storage/v1/object/public/logos/background.png";
+
+  // Use a variable to conditionally render the date block
+  const dateBlock = showDate ? `
+             <tr>
+              <td align="left" style="padding:0;Margin:0;padding-right:20px;padding-left:20px;padding-top:30px">
+               <table width="100%" cellspacing="0" cellpadding="0" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
+                 <tr>
+                  <td valign="top" align="center" style="padding:0;Margin:0;width:560px">
+                   <table width="100%" cellspacing="0" cellpadding="0" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
+                     <tr>
+                      <td align="center" style="padding:0;Margin:0">
+                        <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#666666;font-size:14px;text-align:center">${dateStr}</p>
+                      </td>
+                     </tr>
+                   </table></td>
+                 </tr>
+               </table></td>
+             </tr>
+  ` : `
+             <tr>
+              <td align="left" style="padding:0;Margin:0;padding-right:20px;padding-left:20px;padding-top:30px">
+                 <!-- Date hidden -->
+              </td>
+             </tr>
+  `;
 
   return `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -24,7 +49,7 @@ export function getBaseEmailHtml(content: string, title: string = 'Update from T
     a {text-decoration: none;}
     </style>
     <![endif]--><!--[if gte mso 9]><style>sup { font-size: 100% !important; }</style><![endif]--><!--[if gte mso 9]>
-<noscript>
+    <noscript>
          <xml>
            <o:OfficeDocumentSettings>
            <o:AllowPNG></o:AllowPNG>
@@ -59,6 +84,19 @@ export function getBaseEmailHtml(content: string, title: string = 'Update from T
         margin-top: 5px;
         margin-bottom: 10px;
     }
+    
+    /* FIX: Ensure paragraphs and lists have proper spacing */
+    .es-content-body p, .es-content-body ul, .es-content-body ol {
+        margin-top: 0;
+        margin-bottom: 15px; /* Add visible gap between paragraphs */
+        line-height: 1.5;
+    }
+
+    /* FIX: Ensure empty lines (created by Enter) are visible */
+    p:empty:before {
+        content: "\\a0"; /* Non-breaking space */
+    }
+    
     
     @media only screen and (max-width:600px) {
         .es-m-p0r { padding-right:0px!important } 
@@ -120,21 +158,9 @@ export function getBaseEmailHtml(content: string, title: string = 'Update from T
          <tr>
           <td align="center" style="padding:0;Margin:0">
            <table cellspacing="0" cellpadding="0" bgcolor="#ffffff" align="center" class="es-content-body" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;background-color:#FFFFFF;border-top:10px solid #39285e;width:600px;border-bottom:10px solid #39285e" role="none">
-             <tr>
-              <td align="left" style="padding:0;Margin:0;padding-right:20px;padding-left:20px;padding-top:30px">
-               <table width="100%" cellspacing="0" cellpadding="0" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
-                 <tr>
-                  <td valign="top" align="center" style="padding:0;Margin:0;width:560px">
-                   <table width="100%" cellspacing="0" cellpadding="0" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">
-                     <tr>
-                      <td align="center" style="padding:0;Margin:0">
-                        <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#666666;font-size:14px;text-align:center">${dateStr}</p>
-                      </td>
-                     </tr>
-                   </table></td>
-                 </tr>
-               </table></td>
-             </tr>
+             
+             ${dateBlock}
+             
              <tr>
               <td background="${bgImage}" align="left" style="padding:0;Margin:0;padding-right:20px;padding-left:20px;padding-top:20px;background-image:url(${bgImage});background-repeat:no-repeat;background-position:center top;background-size:cover">
                <table width="100%" cellspacing="0" cellpadding="0" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px">

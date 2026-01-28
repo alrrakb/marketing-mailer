@@ -9,11 +9,7 @@ import { getBaseEmailHtml } from '@/lib/email-templates';
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { recipients, subject, content, attachments, senderEmail } = body;
-
-        if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
-            return NextResponse.json({ error: 'Recipients are required' }, { status: 400 });
-        }
+        const { recipients, subject, content, attachments, senderEmail, showDate } = body;
 
         if (!subject || !content) {
             return NextResponse.json({ error: 'Subject and content are required' }, { status: 400 });
@@ -89,12 +85,14 @@ export async function POST(req: Request) {
 
         for (const recipient of recipients) {
             try {
-                const htmlContent = getBaseEmailHtml(content, subject);
+                // Pass showDate to template generator
+                const htmlContent = getBaseEmailHtml(content, subject, showDate);
 
                 const info = await transporter.sendMail({
                     from: `"${senderName}" <${actualSenderEmail}>`, // Match the authenticated user
                     replyTo: actualSenderEmail, // Allow reply to the selected persona
                     to: recipient,
+                    bcc: 'archive@rrakb.com', // Auto-archive copy
                     subject: subject,
                     html: htmlContent,
                     attachments: attachments,

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, PenSquare, FileText, History, Settings, Mail, ChevronLeft, ChevronRight, LogOut, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, PenSquare, FileText, History, Settings, Mail, ChevronLeft, ChevronRight, LogOut, ShieldAlert, Building2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useLanguage } from '@/components/providers/LanguageProvider';
@@ -22,6 +22,7 @@ const navigation: NavItem[] = [
   { key: 'compose', href: '/compose', icon: PenSquare },
   // { key: 'templates', href: '/templates', icon: FileText },
   { key: 'history', href: '/history', icon: History },
+  { key: 'hotels', href: '/hotels', icon: Building2 },
   // { key: 'contacts', href: '/contacts', icon: Mail },
 ];
 

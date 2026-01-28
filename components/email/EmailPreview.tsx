@@ -7,13 +7,14 @@ interface EmailPreviewProps {
     subject: string;
     isOpen: boolean;
     onClose: () => void;
+    showDate: boolean;
 }
 
-export default function EmailPreview({ content, subject, isOpen, onClose }: EmailPreviewProps) {
+export default function EmailPreview({ content, subject, isOpen, onClose, showDate }: EmailPreviewProps) {
     const { dict, dir } = useLanguage();
     if (!isOpen) return null;
 
-    const html = getBaseEmailHtml(content, subject);
+    const html = getBaseEmailHtml(content, subject, showDate);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">

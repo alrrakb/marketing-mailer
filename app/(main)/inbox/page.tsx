@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/components/providers/LanguageProvider';
-import { Mail, Plus, Trash2, CheckCircle, RefreshCw, X, Eye, Inbox as InboxIcon } from 'lucide-react';
+import { Mail, Plus, Trash2, CheckCircle, RefreshCw, X, Eye, Inbox as InboxIcon, Globe, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type InboxMessage = {
@@ -23,6 +23,18 @@ export default function InboxPage() {
     const [isSimulating, setIsSimulating] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState<InboxMessage | null>(null);
     const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
+
+    // Translation State
+    const [isTranslated, setIsTranslated] = useState(false);
+    const [isTranslating, setIsTranslating] = useState(false);
+    const [translatedContent, setTranslatedContent] = useState<string>("");
+
+    // Reset translation when message changes
+    useEffect(() => {
+        setIsTranslated(false);
+        setIsTranslating(false);
+        setTranslatedContent("");
+    }, [selectedMessage]);
 
     // Toast state (reuse logic if extracted, or local for now)
     const [toast, setToast] = useState<{ type: 'success' | 'error', message: string } | null>(null);
@@ -47,6 +59,12 @@ export default function InboxPage() {
             if (sync) {
                 const syncRes = await fetch('/api/inbox?action=sync', { method: 'POST' });
                 if (!syncRes.ok) {
+                    // Check for 401 Unauthorized specifically to avoid console spam
+                    if (syncRes.status === 401) {
+                        // Session expired - silently fail background sync
+                        return;
+                    }
+
                     const errData = await syncRes.json().catch(() => ({ error: syncRes.statusText }));
                     // Only show toast on error if manual sync, or maybe just log it on background
                     if (!isBackground) {
@@ -109,6 +127,42 @@ export default function InboxPage() {
         } catch (error) {
             console.error(error);
         }
+    };
+
+    const handleTranslate = () => {
+        if (!selectedMessage) return;
+
+        if (isTranslated) {
+            setIsTranslated(false);
+            return;
+        }
+
+        const content = selectedMessage.content;
+        const isArabic = /[\u0600-\u06FF]/.test(content);
+
+        let translated = "";
+
+        // Simulation Logic:
+        // In a real app, we would call an API like Google Cloud Translation here.
+        // For simulation, we'll wrap text or show a placeholder.
+        if (isArabic) {
+            translated = `<div style="padding: 10px; border-left: 3px solid #39285e; background: #f8f9fa;">
+                <strong>[Simulated Translation to English]</strong><br/><br/>
+                This is a simulated English translation of the Arabic content.<br/>
+                (Real-time translation requires a paid API integration).<br/><br/>
+                Original length: ${content.length} chars.
+            </div>`;
+        } else {
+            translated = `<div style="padding: 10px; border-right: 3px solid #39285e; background: #f8f9fa; direction: rtl; text-align: right;">
+                <strong>[محاكاة الترجمة للعربية]</strong><br/><br/>
+                هذه ترجمة محاكاة للمحتوى الإنجليزي.<br/>
+                (الترجمة الفورية تتطلب ربط مع خدمة مدفوعة).<br/><br/>
+                النص الأصلي: ${content}
+            </div>`;
+        }
+
+        setTranslatedContent(translated);
+        setIsTranslated(true);
     };
 
     const handleDelete = (id: string) => {
@@ -366,16 +420,38 @@ export default function InboxPage() {
                                     <span>{new Date(selectedMessage.received_at).toLocaleString()}</span>
                                 </div>
                             </div>
-                            <button onClick={() => setSelectedMessage(null)} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors">
-                                <X className="w-6 h-6 text-gray-500" />
-                            </button>
+
+                            {/* Action Buttons: Translate & Close */}
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleTranslate}
+                                    className={`p-2 rounded-full transition-all flex items-center justify-center ${isTranslated
+                                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                        : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-[#39285e] border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-white'
+                                        }`}
+                                    title={isTranslated ? dict.inbox.show_original : dict.inbox.translate_btn}
+                                >
+                                    <Globe className="w-5 h-5" />
+                                </button>
+                                <button onClick={() => setSelectedMessage(null)} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500 hover:text-red-500">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="flex-1 overflow-auto bg-white dark:bg-gray-950 p-6">
+                        <div className="flex-1 overflow-auto bg-white dark:bg-gray-950 p-6 relative">
+                            {/* Translation Banner */}
+                            {isTranslated && (
+                                <div className="sticky top-0 z-10 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-4 py-2 mb-4 text-sm font-medium rounded-lg flex items-center gap-2 border border-blue-100 dark:border-blue-900/50">
+                                    <Globe className="w-4 h-4" />
+                                    {dict.inbox.translated_label}
+                                </div>
+                            )}
+
                             {/* Safe HTML render or IFrame */}
                             <div className="prose dark:prose-invert max-w-none w-full h-full">
                                 <iframe
-                                    srcDoc={getStyledContent(selectedMessage.content)}
+                                    srcDoc={getStyledContent(isTranslated ? translatedContent : selectedMessage.content)}
                                     className="w-full min-h-[500px] border-0"
                                     sandbox="allow-same-origin"
                                     title="Email Content"
