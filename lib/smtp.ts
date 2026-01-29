@@ -14,3 +14,19 @@ export const transporter = nodemailer.createTransport({
 export const mailOptions = {
     from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM_EMAIL}>`,
 };
+
+export const sendEmail = async ({ to, subject, html, attachments }: any) => {
+    try {
+        await transporter.sendMail({
+            ...mailOptions,
+            to,
+            subject,
+            html,
+            attachments
+        });
+        return true;
+    } catch (error) {
+        console.error('SMTP Error:', error);
+        throw error;
+    }
+};

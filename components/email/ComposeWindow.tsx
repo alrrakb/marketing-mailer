@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Editor from '@/components/email/Editor';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Save, Send, Loader2, Eye, FileText, Sparkles, Mail, AlertTriangle, X, Minimize2, Maximize2, Plus } from 'lucide-react';
+import { ArrowLeft, Save, Send, Loader2, Eye, FileText, Sparkles, Mail, AlertTriangle, X, Minimize2, Maximize2, Plus, List, Clock } from 'lucide-react';
 import EmailPreview from '@/components/email/EmailPreview';
 import EmailSelectionModal from '@/components/email/EmailSelectionModal';
 import { useLanguage } from '@/components/providers/LanguageProvider';
@@ -21,13 +21,16 @@ interface ComposeWindowProps {
     initialRecipients?: string[];
     isModal?: boolean;
     onClose?: () => void;
+    mode?: 'direct' | 'queue'; // New Prop
 }
 
-export default function ComposeWindow({ initialRecipients = [], isModal = false, onClose }: ComposeWindowProps) {
+export default function ComposeWindow({ initialRecipients = [], isModal = false, onClose, mode = 'direct' }: ComposeWindowProps) {
+    // ... existing hooks ...
     const { user } = useAuth();
     const { dict, dir, language } = useLanguage();
     const [content, setContent] = useState('');
-    const [editorKey, setEditorKey] = useState(0); // Force editor remount
+    // ... rest of state ...
+    const [editorKey, setEditorKey] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -36,20 +39,18 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
     const [draftToLoad, setDraftToLoad] = useState<any | null>(null);
     const [attachments, setAttachments] = useState<{ filename: string, content: string, encoding: 'base64' }[]>([]);
     const [showDate, setShowDate] = useState(true);
+    const [scheduledAt, setScheduledAt] = useState(''); // New State for Scheduling
 
-    // Undo Send State
     const [isUndoable, setIsUndoable] = useState(false);
     const [countdown, setCountdown] = useState(0);
     const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
     const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // AI State
     const [isAIModalOpen, setIsAIModalOpen] = useState(false);
     const [aiMode, setAiMode] = useState<'generate' | 'refine'>('generate');
     const [aiPrompt, setAiPrompt] = useState('');
     const [isAILoading, setIsAILoading] = useState(false);
 
-    // Email Selection Modal
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
     const { register, handleSubmit, getValues, setValue, formState: { errors } } = useForm<FormData>({
@@ -58,13 +59,14 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
         }
     });
 
-    // Update recipients if prop changes
+    // ... useEffect ...
     useEffect(() => {
         if (initialRecipients.length > 0) {
             setValue('recipients', initialRecipients.join(', '));
         }
     }, [initialRecipients, setValue]);
 
+    // ... AI Handlers ...
     const openAIModal = (mode: 'generate' | 'refine') => {
         setAiMode(mode);
         setAiPrompt('');
@@ -72,6 +74,7 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
     };
 
     const handleAIRequest = async () => {
+        // ... (Keep existing AI logic) ...
         if (!aiPrompt.trim()) return;
         setIsAILoading(true);
         try {
@@ -94,12 +97,11 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
             } else {
                 // Refine
                 const strippedContent = content.replace(/<[^>]*>/g, '').trim();
-
+                // ... check length ...
                 if (!strippedContent && content.length < 50) {
                     toast.error(dict.ai.error_no_content);
                     return;
                 }
-
                 const res = await fetch('/api/ai/refine', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -120,11 +122,12 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
         }
     };
 
+    // ... File Handlers ...
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        // ... (Keep existing) ...
         if (e.target.files && e.target.files.length > 0) {
             const files = Array.from(e.target.files);
             const newAttachments: any[] = [];
-
             for (const file of files) {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
@@ -147,7 +150,6 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
     const removeAttachment = (index: number) => {
         setAttachments(prev => prev.filter((_, i) => i !== index));
     };
-
 
     // Batch Sending State
     const isSendingCancelled = useRef(false);
@@ -176,8 +178,48 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
             return;
         }
 
-        // SEQUENTIAL SENDING LOGIC (1 by 1)
-        // User requested to remove batches and use a respectable delay (30s) between each email.
+        // QUEUE MODE LOGIC
+        if (mode === 'queue') {
+            try {
+                const res = await fetch('/api/queue/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recipients: recipientList,
+                        subject: data.subject,
+                        content: content,
+                        userEmail: user?.email,
+                        attachments: attachments,
+                        // Ensure Timezone is respected:
+                        // Input is local (YYYY-MM-DDTHH:mm). new Date() assumes browser local time.
+                        // toISOString() converts it to UTC.
+                        scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null
+                    }),
+                });
+
+                if (!res.ok) {
+                    const result = await res.json();
+                    throw new Error(result.error || 'Failed to queue emails');
+                }
+
+                const result = await res.json();
+                setMessage({ type: 'success', text: `Successfully added ${result.count} emails to the queue.` });
+                setAttachments([]);
+                if (isModal && onClose) {
+                    setTimeout(() => {
+                        onClose();
+                        toast.success('Emails queued successfully');
+                    }, 1500);
+                }
+            } catch (error: any) {
+                setMessage({ type: 'error', text: error.message });
+            } finally {
+                setIsLoading(false);
+            }
+            return; // Exit here for queue mode
+        }
+
+        // DIRECT SENDING LOGIC (Client Side Loop)
         try {
             for (let i = 0; i < totalRecipients; i++) {
                 // Check cancellation
@@ -203,7 +245,7 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        recipients: [recipient], // Send 1 by 1 to API
+                        recipients: [recipient], // Send 1 by 1
                         subject: data.subject,
                         content: content,
                         senderEmail: user?.email,
@@ -267,36 +309,7 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
     };
 
     const onSubmit = async (data: FormData) => {
-        const recipientsStr = data.recipients;
-        const recipientList = recipientsStr.split(',').map(email => email.trim()).filter(email => email);
-
-        if (recipientList.length > 1) {
-            // BULK SEND: Send immediately (Sequential logic handles delay)
-            // No optimistic undo popup here, just progress bar.
-            executeSend(data);
-        } else {
-            // SINGLE SEND: Optimistic Undo (Gmail Style)
-            // Start Undo Flow
-            setIsUndoable(true);
-            setIsLoading(true); // Lock UI loosely
-            setCountdown(30);
-
-            // Countdown Interval
-            countdownIntervalRef.current = setInterval(() => {
-                setCountdown(prev => {
-                    if (prev <= 1) {
-                        if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-
-            // Actual Send Timer
-            undoTimerRef.current = setTimeout(() => {
-                executeSend(data);
-            }, 30000);
-        }
+        executeSend(data);
     };
 
     const saveDraft = async () => {
@@ -406,6 +419,15 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
                         </button>
                         <button
                             type="button"
+                            onClick={() => window.open('/admin/queue', '_blank')}
+                            className="justify-center px-2 py-1.5 md:px-4 md:py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm text-[10px] md:text-sm"
+                            title="Queue Manager"
+                        >
+                            <List className="w-3 h-3 md:w-4 md:h-4 text-[#79bbe0]" />
+                            <span className="truncate">{dict.common.queue || "Queue"}</span>
+                        </button>
+                        <button
+                            type="button"
                             onClick={() => setIsPreviewOpen(true)}
                             className="justify-center px-2 py-1.5 md:px-4 md:py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm text-[10px] md:text-sm"
                         >
@@ -427,7 +449,7 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
                             className="col-span-2 md:col-span-auto justify-center px-6 py-2 bg-[#39285e] text-white rounded-lg font-bold hover:bg-[#2d1f4b] shadow-lg shadow-[#39285e]/20 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-xs md:text-sm whitespace-nowrap transform hover:scale-[1.02] active:scale-95 md:hover:scale-105"
                         >
                             {isLoading ? <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" /> : <Send className="w-3.5 h-3.5 md:w-4 md:h-4" />}
-                            {dict.compose.send_email}
+                            {mode === 'queue' ? (dict.compose.add_to_queue || "Add to Queue") : dict.compose.send_email}
                         </button>
                     </div>
                 </div>
@@ -501,7 +523,44 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
                             </div>
                         </div>
 
-                        {/* Date Toggle Switch */}
+                        {/* Schedule Input (Queue Mode Only) */}
+                        {mode === 'queue' && (
+                            <div className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800 animate-in fade-in slide-in-from-top-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Clock className="w-4 h-4 text-indigo-500" />
+                                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        {dict.compose.schedule_label || 'Schedule Sending (Optional)'}
+                                    </label>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="datetime-local"
+                                        value={scheduledAt}
+                                        onChange={(e) => setScheduledAt(e.target.value)}
+                                        className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#79bbe0] outline-none text-sm dark:text-white w-full md:w-auto"
+                                    />
+                                    {scheduledAt && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setScheduledAt('')}
+                                            className="text-gray-400 hover:text-red-500 transition-colors text-xs"
+                                        >
+                                            {dict.compose.schedule_clear || 'Clear'}
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="flex items-center justify-between mt-1">
+                                    <p className="text-[10px] text-gray-400">
+                                        {dict.compose.schedule_hint || 'Leave empty for immediate processing.'}
+                                    </p>
+                                    <p className="text-[10px] text-indigo-500 font-medium">
+                                        {dict.compose.timezone_label || 'Your Timezone:'} {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Date Toggle Switch (Existing) */}
                         <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-gray-800 mt-4">
                             <div
                                 className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ease-in-out ${showDate ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-700'}`}
