@@ -258,11 +258,11 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
 
     // Render classes based on isModal
     const containerClasses = isModal
-        ? "fixed inset-0 z-[60] bg-gray-100 dark:bg-gray-950 flex flex-col animate-in fade-in slide-in-from-bottom-4" // Full screen modal
+        ? "fixed inset-0 z-[60] bg-gray-100 dark:bg-gray-950 animate-in fade-in slide-in-from-bottom-4 overflow-y-auto" // Full screen modal with scroll
         : "min-h-screen bg-gray-50 dark:bg-gray-950 pb-20"; // Normal page
 
     const innerClasses = isModal
-        ? "flex-1 flex flex-col max-w-7xl w-full mx-auto px-4 py-4 md:py-6 overflow-hidden h-full"
+        ? "max-w-7xl w-full mx-auto px-4 py-4 md:py-6" // flows naturally
         : "max-w-6xl mx-auto px-4 py-8";
 
     return (
@@ -340,7 +340,7 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
                     </div>
                 )}
 
-                <form id="compose-form" onSubmit={handleSubmit(onSubmit)} className={`space-y-6 flex flex-col ${isModal ? 'flex-1 overflow-hidden' : ''}`}>
+                <form id="compose-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6 flex flex-col">
                     {/* Metadata Card */}
                     <div className="grid gap-4 md:gap-6 bg-white dark:bg-gray-900/50 p-4 md:p-8 rounded-2xl shadow-md border-t-4 border-[#39285e] dark:border-[#79bbe0] shrink-0">
                         <div className="grid md:grid-cols-2 gap-4 md:gap-6">
@@ -382,7 +382,7 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
                             >
                                 <div
                                     className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-200 ease-in-out ${showDate
-                                        ? (dir === 'rtl' ? '-translate-x-6' : 'translate-x-6')
+                                        ? 'translate-x-6'
                                         : 'translate-x-0'
                                         }`}
                                 />
@@ -443,7 +443,7 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
                         )}
 
                         <div className="p-4 flex-1 flex flex-col h-full">
-                            <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex-1 flex flex-col">
+                            <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex-1 flex flex-col max-h-[60vh] min-h-[300px]">
                                 <Editor key={editorKey} value={content} onChange={setContent} onRefine={() => openAIModal('refine')} />
                             </div>
                         </div>

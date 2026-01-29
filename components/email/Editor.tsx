@@ -85,7 +85,7 @@ const Toolbar = ({ editor, onImageClick, onRefineClick }: { editor: any, onImage
     );
 
     return (
-        <div className="sticky top-0 z-20 border-b border-gray-200 dark:border-gray-700 p-2 flex gap-1 flex-wrap bg-gray-50/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-t-lg">
+        <div className="p-2 flex gap-1 flex-wrap rounded-t-lg">
             <button
                 type="button"
                 onClick={onRefineClick}
@@ -419,9 +419,15 @@ export default function Editor({ value, onChange, onRefine }: EditorProps) {
     }, [value, editor]);
 
     return (
-        <div className="border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm bg-white dark:bg-gray-800/40 overflow-hidden transition-colors">
-            <Toolbar editor={editor} onImageClick={() => setIsImageManagerOpen(true)} onRefineClick={onRefine || (() => { })} />
-            <EditorContent editor={editor} className="bg-white dark:bg-transparent [&_.ProseMirror]:min-h-[300px] [&_.ProseMirror]:w-full" />
+        <div className="border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm bg-white dark:bg-gray-800/40 overflow-hidden transition-colors flex flex-col h-full">
+            <div className="shrink-0 z-20 border-b border-gray-200 dark:border-gray-700 bg-gray-50/95 dark:bg-gray-800/95 backdrop-blur-sm">
+                <Toolbar editor={editor} onImageClick={() => setIsImageManagerOpen(true)} onRefineClick={onRefine || (() => { })} />
+            </div>
+
+            <div className="flex-1 overflow-y-auto min-h-0 bg-white dark:bg-transparent">
+                <EditorContent editor={editor} className="[&_.ProseMirror]:min-h-[300px] [&_.ProseMirror]:w-full [&_.ProseMirror]:p-4 [&_.ProseMirror]:outline-none" />
+            </div>
+
             <ImageManager
                 isOpen={isImageManagerOpen}
                 onClose={() => setIsImageManagerOpen(false)}
@@ -431,7 +437,7 @@ export default function Editor({ value, onChange, onRefine }: EditorProps) {
             />
             <style>{`
                 .ProseMirror p {
-                    width: 100% !important;
+                    width: 100% !important; 
                     max-width: 100% !important;
                     margin: 0.5em 0 !important;
                 }

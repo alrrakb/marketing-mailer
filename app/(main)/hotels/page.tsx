@@ -201,7 +201,12 @@ export default function HotelsPage() {
                             </button>
                         )}
                         <button
-                            onClick={() => setIsSelectionMode(!isSelectionMode)}
+                            onClick={() => {
+                                if (isSelectionMode) {
+                                    setSelectedHotels(new Set());
+                                }
+                                setIsSelectionMode(!isSelectionMode);
+                            }}
                             className={`p-2.5 rounded-xl transition-all border ${isSelectionMode
                                 ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800'
                                 : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-700'
