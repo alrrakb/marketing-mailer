@@ -80,7 +80,7 @@ export async function POST(req: Request) {
                 user: actualSenderEmail, // Auth as the sender
                 pass: smtpPassword, // Unified Password
             },
-        });
+        } as any);
 
         const results = [];
 
