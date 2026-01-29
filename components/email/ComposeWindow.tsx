@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Editor from '@/components/email/Editor';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Save, Send, Loader2, Eye, FileText, Sparkles, Mail, AlertTriangle, X, Minimize2, Maximize2 } from 'lucide-react';
+import { ArrowLeft, Save, Send, Loader2, Eye, FileText, Sparkles, Mail, AlertTriangle, X, Minimize2, Maximize2, Plus } from 'lucide-react';
 import EmailPreview from '@/components/email/EmailPreview';
+import EmailSelectionModal from '@/components/email/EmailSelectionModal';
 import { useLanguage } from '@/components/providers/LanguageProvider';
 import { toast } from 'sonner';
 
@@ -23,7 +24,7 @@ interface ComposeWindowProps {
 
 export default function ComposeWindow({ initialRecipients = [], isModal = false, onClose }: ComposeWindowProps) {
     const { user } = useAuth();
-    const { dict, dir } = useLanguage();
+    const { dict, dir, language } = useLanguage();
     const [content, setContent] = useState('');
     const [editorKey, setEditorKey] = useState(0); // Force editor remount
     const [isLoading, setIsLoading] = useState(false);
@@ -35,11 +36,20 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
     const [attachments, setAttachments] = useState<{ filename: string, content: string, encoding: 'base64' }[]>([]);
     const [showDate, setShowDate] = useState(true);
 
+    // Undo Send State
+    const [isUndoable, setIsUndoable] = useState(false);
+    const [countdown, setCountdown] = useState(0);
+    const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
     // AI State
     const [isAIModalOpen, setIsAIModalOpen] = useState(false);
     const [aiMode, setAiMode] = useState<'generate' | 'refine'>('generate');
     const [aiPrompt, setAiPrompt] = useState('');
     const [isAILoading, setIsAILoading] = useState(false);
+
+    // Email Selection Modal
+    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
     const { register, handleSubmit, getValues, setValue, formState: { errors } } = useForm<FormData>({
         defaultValues: {
@@ -137,8 +147,11 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
         setAttachments(prev => prev.filter((_, i) => i !== index));
     };
 
-    const onSubmit = async (data: FormData) => {
+
+
+    const executeSend = async (data: FormData) => {
         setIsLoading(true);
+        setIsUndoable(false);
         setMessage(null);
 
         const recipientList = data.recipients.split(',').map(email => email.trim()).filter(email => email);
@@ -195,6 +208,43 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleUndo = () => {
+        if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+        if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+        setIsUndoable(false);
+        setIsLoading(false);
+        toast.info("Sending cancelled");
+    };
+
+    const handleSendNow = () => {
+        if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+        if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+        executeSend(getValues());
+    };
+
+    const onSubmit = async (data: FormData) => {
+        // Start Undo Flow
+        setIsUndoable(true);
+        setIsLoading(true); // Lock UI loosely
+        setCountdown(30);
+
+        // Countdown Interval
+        countdownIntervalRef.current = setInterval(() => {
+            setCountdown(prev => {
+                if (prev <= 1) {
+                    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        // Actual Send Timer
+        undoTimerRef.current = setTimeout(() => {
+            executeSend(data);
+        }, 30000);
     };
 
     const saveDraft = async () => {
@@ -346,16 +396,26 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
                         <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                             <div className="space-y-1.5 md:space-y-2">
                                 <label className="block font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider text-[10px] md:text-xs">{dict.compose.recipients}</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Mail className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
+                                <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <div className="absolute inset-y-0 left-0 rtl:right-0 rtl:left-auto pl-3 rtl:pr-3 rtl:pl-0 flex items-center pointer-events-none">
+                                            <Mail className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            {...register('recipients', { required: 'Recipients are required' })}
+                                            type="text"
+                                            placeholder={dict.compose.recipients_placeholder}
+                                            className="w-full pl-9 rtl:pr-9 rtl:pl-4 md:pl-10 md:rtl:pr-10 pr-4 py-2 md:py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#79bbe0] focus:border-transparent dark:text-white outline-none transition-all placeholder:text-gray-400 text-sm"
+                                        />
                                     </div>
-                                    <input
-                                        {...register('recipients', { required: 'Recipients are required' })}
-                                        type="text"
-                                        placeholder={dict.compose.recipients_placeholder}
-                                        className="w-full pl-9 md:pl-10 pr-4 py-2 md:py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#79bbe0] focus:border-transparent dark:text-white outline-none transition-all placeholder:text-gray-400 text-sm"
-                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEmailModalOpen(true)}
+                                        className="px-4 py-2 bg-[#79bbe0]/10 hover:bg-[#79bbe0]/20 text-[#79bbe0] border border-[#79bbe0]/30 rounded-xl transition-colors flex items-center justify-center shrink-0"
+                                        title={language === 'ar' ? "إضافة من الفنادق" : "Add from Hotels Database"}
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                    </button>
                                 </div>
                                 {errors.recipients && <p className="text-red-500 text-xs md:text-sm">{errors.recipients.message}</p>}
                             </div>
@@ -533,6 +593,19 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
                         </div>
                     </div>
                 )}
+
+                {/* Email Selection Modal */}
+                <EmailSelectionModal
+                    isOpen={isEmailModalOpen}
+                    onClose={() => setIsEmailModalOpen(false)}
+                    currentRecipients={getValues('recipients')?.split(',').map(e => e.trim()) || []}
+                    onSelect={(emails) => {
+                        const current = getValues('recipients') || '';
+                        const currentList = current.split(',').map(e => e.trim()).filter(e => e);
+                        const newSet = new Set([...currentList, ...emails]);
+                        setValue('recipients', Array.from(newSet).join(', '));
+                    }}
+                />
 
                 {/* AI Modal */}
                 {isAIModalOpen && (
