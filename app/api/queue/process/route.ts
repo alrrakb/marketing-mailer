@@ -178,7 +178,7 @@ export async function GET(req: Request) {
         // 4. Check for Campaign Completion
         // Identify campaigns that might have finished
         const returnedIds = results.map(r => r.id);
-        const touchedCampaignIds = [...new Set(emails.map(e => e.campaign_id))];
+        const touchedCampaignIds = [...new Set(emails.map((e: any) => e.campaign_id))];
 
         for (const cId of touchedCampaignIds) {
             // Check if any pending items remain for this campaign
