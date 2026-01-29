@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Editor from '@/components/email/Editor';
@@ -148,13 +149,23 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
     };
 
 
+    // Batch Sending State
+    const isSendingCancelled = useRef(false);
+
+    const handleStopSending = () => {
+        isSendingCancelled.current = true;
+    };
 
     const executeSend = async (data: FormData) => {
         setIsLoading(true);
         setIsUndoable(false);
         setMessage(null);
+        isSendingCancelled.current = false;
 
         const recipientList = data.recipients.split(',').map(email => email.trim()).filter(email => email);
+        const totalRecipients = recipientList.length;
+
+        // Validation: Size
         const attachmentsSize = attachments.reduce((acc, curr) => acc + (curr.content.length * 0.75), 0);
         const contentSize = new Blob([content]).size;
         const totalSize = attachmentsSize + contentSize;
@@ -165,48 +176,79 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
             return;
         }
 
+        // SEQUENTIAL SENDING LOGIC (1 by 1)
+        // User requested to remove batches and use a respectable delay (30s) between each email.
         try {
-            const res = await fetch('/api/send-email', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    recipients: recipientList,
-                    subject: data.subject,
-                    content: content,
-                    senderEmail: user?.email,
-                    attachments: attachments,
-                    showDate: showDate,
-                }),
-            });
+            for (let i = 0; i < totalRecipients; i++) {
+                // Check cancellation
+                if (isSendingCancelled.current) {
+                    setMessage({ type: 'error', text: dict.compose.sending_cancelled || "Sending cancelled" });
+                    return;
+                }
 
-            if (!res.ok) {
-                const contentType = res.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
+                const recipient = recipientList[i];
+                const isLast = i === totalRecipients - 1;
+
+                // Update UI with progress (Localized)
+                const progressText = language === 'ar'
+                    ? `جاري إرسال ${i + 1} / ${totalRecipients}`
+                    : `Sending ${i + 1} / ${totalRecipients}`;
+
+                setMessage({
+                    type: 'success',
+                    text: `${progressText}... (${recipient})`
+                });
+
+                const res = await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recipients: [recipient], // Send 1 by 1 to API
+                        subject: data.subject,
+                        content: content,
+                        senderEmail: user?.email,
+                        attachments: attachments,
+                        showDate: showDate,
+                    }),
+                });
+
+                if (!res.ok) {
                     const result = await res.json();
-                    throw new Error(result.error || 'Failed to send email');
-                } else {
-                    const text = await res.text();
-                    if (res.status === 413) {
-                        throw new Error('File too large (413). Please reduce attachment size.');
+                    throw new Error(result.error || `Failed to send to ${recipient}`);
+                }
+
+                // Random Delay between emails (30, 40, 50, 60 seconds)
+                if (!isLast) {
+                    const possibleDelays = [30, 40, 50, 60];
+                    const randomDelay = possibleDelays[Math.floor(Math.random() * possibleDelays.length)];
+
+                    // Polling Wait: Check for cancellation every 1s
+                    for (let j = 0; j < randomDelay; j++) {
+                        if (isSendingCancelled.current) break;
+                        await new Promise(resolve => setTimeout(resolve, 1000));
                     }
-                    throw new Error(`Server Error (${res.status}): ${text.substring(0, 50)}...`);
                 }
             }
 
+            // All Success
             setMessage({ type: 'success', text: dict.compose.email_sent });
             setAttachments([]);
+
+            // Optimistic Success Popup
+            setIsUndoable(true);
+
             if (isModal && onClose) {
                 setTimeout(() => {
                     onClose();
                     toast.success(dict.compose.email_sent);
                 }, 1500);
             }
+
         } catch (error: any) {
             setMessage({ type: 'error', text: error.message });
         } finally {
             setIsLoading(false);
+            isSendingCancelled.current = false;
         }
     };
 
@@ -225,26 +267,36 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
     };
 
     const onSubmit = async (data: FormData) => {
-        // Start Undo Flow
-        setIsUndoable(true);
-        setIsLoading(true); // Lock UI loosely
-        setCountdown(30);
+        const recipientsStr = data.recipients;
+        const recipientList = recipientsStr.split(',').map(email => email.trim()).filter(email => email);
 
-        // Countdown Interval
-        countdownIntervalRef.current = setInterval(() => {
-            setCountdown(prev => {
-                if (prev <= 1) {
-                    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        // Actual Send Timer
-        undoTimerRef.current = setTimeout(() => {
+        if (recipientList.length > 1) {
+            // BULK SEND: Send immediately (Sequential logic handles delay)
+            // No optimistic undo popup here, just progress bar.
             executeSend(data);
-        }, 30000);
+        } else {
+            // SINGLE SEND: Optimistic Undo (Gmail Style)
+            // Start Undo Flow
+            setIsUndoable(true);
+            setIsLoading(true); // Lock UI loosely
+            setCountdown(30);
+
+            // Countdown Interval
+            countdownIntervalRef.current = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev <= 1) {
+                        if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+
+            // Actual Send Timer
+            undoTimerRef.current = setTimeout(() => {
+                executeSend(data);
+            }, 30000);
+        }
     };
 
     const saveDraft = async () => {
@@ -381,12 +433,29 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
                 </div>
 
                 {message && (
-                    <div className={`p-4 mb-8 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 shadow-sm shrink-0 ${message.type === 'success'
+                    <div className={`p-4 mb-8 rounded-xl flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-4 shadow-sm shrink-0 ${message.type === 'success'
                         ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800'
                         : 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800'
                         }`}>
-                        <div className={`w-2 h-2 rounded-full ${message.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`} />
-                        {message.text}
+                        <div className="flex items-center gap-3">
+                            {isLoading && message.type === 'success' ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <div className={`w-2 h-2 rounded-full ${message.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`} />
+                            )}
+                            {message.text}
+                        </div>
+
+                        {isLoading && message.type === 'success' && (
+                            <button
+                                onClick={handleStopSending}
+                                type="button"
+                                className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
+                                title={dict.compose.stop_sending || "Stop Sending"}
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        )}
                     </div>
                 )}
 
@@ -661,6 +730,35 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
                     </div>
                 )}
             </div>
+
+            {/* Undo Banner - Portal to Body */}
+            {isUndoable && typeof document !== 'undefined' && createPortal(
+                <div
+                    dir={dir}
+                    className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[9999] flex items-center justify-between gap-6 bg-[#39285e] text-white px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-bottom-10 fade-in min-w-[350px] border border-[#79bbe0]/30 font-sans backdrop-blur-sm"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                        <span className="text-sm font-medium">{dict.compose.message_sent_undo || "Message sent"}</span>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={handleUndo}
+                            className="text-sm font-bold text-[#79bbe0] hover:text-white transition-colors uppercase tracking-wider hover:bg-[#79bbe0]/10 px-3 py-1.5 rounded-lg"
+                        >
+                            {dict.compose.undo_action || "Undo"}
+                        </button>
+                        <button
+                            onClick={handleSendNow}
+                            className="text-white/40 hover:text-white transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }

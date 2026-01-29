@@ -75,6 +75,7 @@ export async function POST(req: Request) {
             host: process.env.SMTP_HOST || 'smtp.hostinger.com',
             port: 465, // Explicitly per user screenshot
             secure: true, // SSL
+            pool: false, // DISABLE POOLING: Fresh connection for every mail to bypass "burst" limits
             auth: {
                 user: actualSenderEmail, // Auth as the sender
                 pass: smtpPassword, // Unified Password
@@ -85,8 +86,16 @@ export async function POST(req: Request) {
 
         for (const recipient of recipients) {
             try {
+                // Rate Limiting Strategy: Aggressive Delay (4-6 seconds)
+                // Hostinger is very strict. We simulate a human pausing between emails.
+                if (results.length > 0) {
+                    const delay = 4000 + Math.random() * 2000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+
                 // Pass showDate to template generator
                 const htmlContent = getBaseEmailHtml(content, subject, showDate);
+                // ... existing code ...
 
                 const info = await transporter.sendMail({
                     from: `"${senderName}" <${actualSenderEmail}>`, // Match the authenticated user
