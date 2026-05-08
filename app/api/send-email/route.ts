@@ -61,7 +61,7 @@ export async function POST(req: Request) {
 
                 const { data, error } = await resend.emails.send({
                     from: `"${senderName}" <${actualSenderEmail}>`,
-                    reply_to: actualSenderEmail,
+                    replyTo: actualSenderEmail,
                     to: recipient,
                     bcc: 'archive@rrakb.com',
                     subject,

@@ -84,7 +84,7 @@ export async function GET(req: Request) {
 
                 const { data: sendData, error: sendError } = await resend.emails.send({
                     from: `"${senderName}" <${senderEmail}>`,
-                    reply_to: senderEmail,
+                    replyTo: senderEmail,
                     to: email.recipient_email,
                     subject,
                     html: body_html,
