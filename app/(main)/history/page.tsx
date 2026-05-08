@@ -12,9 +12,9 @@ import { useLanguage } from '@/components/providers/LanguageProvider';
 type ResendStatus = 'sent' | 'delivered' | 'delayed' | 'bounced' | 'complained' | 'opened' | 'clicked' | 'failed';
 
 type SentLog = {
-    id: number;
-    created_at: string;
+    id: string;
     sent_at: string;
+    updated_at?: string;
     recipient: string;
     subject: string;
     status: ResendStatus;
@@ -22,7 +22,6 @@ type SentLog = {
     content?: string;
     sender_email?: string;
     resend_email_id?: string;
-    updated_at?: string;
 };
 
 type StatusFilter = 'all' | 'delivered' | 'failed';
