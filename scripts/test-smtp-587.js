@@ -7,16 +7,16 @@ async function main() {
     const config = {
         host: process.env.SMTP_HOST,
         port: 587,
-        secure: false, // true for 465, false for other ports
+        secure: false,
         auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
+            user: process.env.SMTP_AUTH_USER,
+            pass: process.env.SMTP_AUTH_PASS,
         },
     };
 
     console.log('Testing SMTP Connection with Port 587...');
     console.log('Host:', config.host);
-    console.log('User:', config.auth.user);
+    console.log('Authenticating as (Primary):', config.auth.user);
 
     const transporter = nodemailer.createTransport(config);
 

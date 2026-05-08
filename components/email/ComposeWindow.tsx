@@ -278,6 +278,20 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
 
             // Optimistic Success Popup
             setIsUndoable(true);
+            setCountdown(5);
+            countdownIntervalRef.current = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev <= 1) {
+                        clearInterval(countdownIntervalRef.current!);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            undoTimerRef.current = setTimeout(() => {
+                clearInterval(countdownIntervalRef.current!);
+                setIsUndoable(false);
+            }, 5000);
 
             if (isModal && onClose) {
                 setTimeout(() => {
@@ -306,6 +320,12 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
         if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
         if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
         executeSend(getValues());
+    };
+
+    const handleDismiss = () => {
+        if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+        if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+        setIsUndoable(false);
     };
 
     const onSubmit = async (data: FormData) => {
@@ -809,7 +829,7 @@ export default function ComposeWindow({ initialRecipients = [], isModal = false,
                             {dict.compose.undo_action || "Undo"}
                         </button>
                         <button
-                            onClick={handleSendNow}
+                            onClick={handleDismiss}
                             className="text-white/40 hover:text-white transition-colors"
                         >
                             <X className="w-5 h-5" />

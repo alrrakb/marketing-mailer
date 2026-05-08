@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { RefreshCw, Play, Pause, Trash2, AlertCircle, CheckCircle, Clock, Plus, X, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import ComposeWindow from '@/components/email/ComposeWindow';
@@ -13,6 +13,11 @@ export default function QueueDashboard() {
     const [loading, setLoading] = useState(true);
 
     const [refreshing, setRefreshing] = useState(false);
+
+    // Keep a ref to campaigns so the process interval always reads the latest value
+    // without being recreated on every campaigns state change
+    const campaignsRef = useRef<any[]>([]);
+    campaignsRef.current = campaigns;
 
     // New Campaign Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -127,22 +132,22 @@ export default function QueueDashboard() {
 
     useEffect(() => {
         fetchData();
-        const dataInterval = setInterval(fetchData, 10000); // Poll data every 10s for live updates
+        // Poll data every 10s — separate from processor to avoid re-creating intervals
+        const dataInterval = setInterval(fetchData, 10000);
 
-        // Auto-Process Loop: Triggers if there are active campaigns with pending work
+        // Auto-process loop: fires every 15s, reads latest campaigns via ref (no stale closure)
         const processInterval = setInterval(() => {
-            const hasActiveWork = campaigns.some(c => c.status === 'active' && c.stats.pending > 0);
-            if (hasActiveWork) {
-                console.log("Auto-processing active campaigns...");
-                triggerProcessor();
-            }
-        }, 15000); // Run processor every 15s
+            const hasActiveWork = campaignsRef.current.some(
+                c => c.status === 'active' && (c.stats?.pending ?? 0) > 0
+            );
+            if (hasActiveWork) triggerProcessor();
+        }, 15000);
 
         return () => {
             clearInterval(dataInterval);
             clearInterval(processInterval);
         };
-    }, [campaigns]); // Re-evaluate when campaigns list changes
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     if (loading) return <div className="p-8 text-center">{dict.common.loading || "Loading..."}</div>;
 
@@ -373,7 +378,11 @@ export default function QueueDashboard() {
             {isModalOpen && (
                 <ComposeWindow
                     isModal={true}
-                    onClose={() => { setIsModalOpen(false); fetchData(); }}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        fetchData();
+                        triggerProcessor(); // Start processing immediately after campaign creation
+                    }}
                     mode="queue"
                 />
             )}

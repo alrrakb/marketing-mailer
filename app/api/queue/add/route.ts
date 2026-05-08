@@ -13,6 +13,10 @@ export async function POST(req: Request) {
 
         const supabase = await createClient();
 
+        // Resolve calling user's UUID for RLS compliance
+        const { data: { user } } = await supabase.auth.getUser();
+        const userId = user?.id ?? null;
+
         // 1. Create Campaign
         const { data: campaign, error: campError } = await supabase
             .from('campaigns')
@@ -21,6 +25,7 @@ export async function POST(req: Request) {
                 body_html: content,
                 attachments: attachments || [],
                 user_email: userEmail,
+                user_id: userId,
                 status: 'active',
                 total_recipients: recipients.length,
                 scheduled_at: scheduledAt || null
@@ -37,6 +42,7 @@ export async function POST(req: Request) {
             recipient_email: email,
             status: 'pending',
             user_email: userEmail,
+            user_id: userId,
             created_at: new Date(),
             updated_at: new Date(),
             attempts: 0,

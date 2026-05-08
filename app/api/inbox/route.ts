@@ -54,25 +54,29 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: 'Unauthorized: Please log in' }, { status: 401 });
             }
 
-            console.log(`Syncing inbox for: ${user.email}`);
+            console.log(`[INBOX] Sync triggered by: ${user.email}`);
 
-            // Use Service Role for Admin settings access (like send-email)
             const supabaseAdmin = createSupabaseClient(
                 process.env.NEXT_PUBLIC_SUPABASE_URL!,
                 process.env.SUPABASE_SERVICE_ROLE_KEY!
             );
 
-            // 3. Get Password from Settings
-            const { data: settingsData } = await supabaseAdmin
-                .from('settings')
-                .select('value')
-                .eq('key', 'smtp_password')
-                .single();
+            // IMAP always authenticates with the Primary Account.
+            // Aliases cannot log in to IMAP independently.
+            const imapAuthUser = process.env.IMAP_AUTH_USER || process.env.SMTP_AUTH_USER;
+            const imapAuthPass = process.env.IMAP_AUTH_PASS || process.env.SMTP_AUTH_PASS;
 
-            const smtpPassword = settingsData?.value || "T@laeAlR4kb#2026!P1";
+            if (!imapAuthUser || !imapAuthPass) {
+                console.error('[INBOX] IMAP credentials not configured. Set IMAP_AUTH_USER and IMAP_AUTH_PASS in .env.local');
+                return NextResponse.json({ error: 'IMAP not configured' }, { status: 500 });
+            }
 
-            const imap = new ImapHelper();
-            const emails = await imap.fetchNewEmails(user.email, smtpPassword);
+            console.log(`[IMAP] user="${imapAuthUser}" pass_length=${imapAuthPass.length} pass_last_char="${imapAuthPass[imapAuthPass.length - 1]}"`);
+
+            // Filter to only messages addressed to the currently logged-in user's alias.
+            // This way each user sees only their own mail, even though we read from a shared inbox.
+            const imapHelper = new ImapHelper();
+            const emails = await imapHelper.fetchNewEmails(imapAuthUser, imapAuthPass, user.email);
             let newCount = 0;
 
             for (const email of emails) {
@@ -160,19 +164,50 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const idsParam = searchParams.get('ids');
+    const idParam = searchParams.get('id'); // Explicitly get 'id' if needed
 
-    if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    let idsToDelete: string[] = [];
+
+    // Prioritize Body for Bulk Deletes
+    try {
+        // Clone request to avoid body already used error if we fall back? 
+        // Actually, just try parse first.
+        const text = await request.text();
+        if (text) {
+            const body = JSON.parse(text);
+            if (body.ids && Array.isArray(body.ids)) {
+                idsToDelete = body.ids;
+            }
+        }
+    } catch (e) {
+        console.log('Error parsing DELETE body:', e);
+    }
+
+    // Fallback to Query Params
+    if (idsToDelete.length === 0) {
+        if (idsParam) {
+            idsToDelete = idsParam.split(',');
+        } else if (idParam) {
+            idsToDelete = [idParam];
+        }
+    }
+
+    console.log('IDs to delete:', idsToDelete.length);
+
+    if (idsToDelete.length === 0) {
+        return NextResponse.json({ error: 'ID or IDs required' }, { status: 400 });
+    }
 
     try {
         const { error } = await supabase
             .from('inbox')
             .delete()
-            .eq('id', id);
+            .in('id', idsToDelete);
 
         if (error) throw error;
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, count: idsToDelete.length });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

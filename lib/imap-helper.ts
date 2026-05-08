@@ -2,21 +2,23 @@ import imap from 'imap-simple';
 import { simpleParser } from 'mailparser';
 
 export class ImapHelper {
-    // config is now built dynamically in fetchNewEmails
     constructor() { }
 
-    async fetchNewEmails(email: string, password: string) {
-        console.log(`Attempting IMAP connection for: ${email}`);
+    // authUser and authPass are always the Primary Account credentials.
+    // Aliases cannot authenticate to IMAP — only the primary mailbox can.
+    // aliasFilter optionally filters messages by their To/Delivered-To header.
+    async fetchNewEmails(authUser: string, authPass: string, aliasFilter?: string) {
+        console.log(`[IMAP] Connecting as Primary Account: <${authUser}>${aliasFilter ? ` (filtering for alias: <${aliasFilter}>)` : ''}`);
 
         const config = {
             imap: {
-                user: email,
-                password: password,
-                host: 'imap.hostinger.com',
-                port: 993,
+                user: authUser,
+                password: authPass,
+                host: process.env.IMAP_HOST || 'imap.hostinger.com',
+                port: Number(process.env.IMAP_PORT) || 993,
                 tls: true,
                 tlsOptions: { rejectUnauthorized: false },
-                authTimeout: 10000,
+                authTimeout: 30000,
             }
         };
 
@@ -27,14 +29,19 @@ export class ImapHelper {
             await connection.openBox('INBOX');
             console.log('INBOX Opened. Searching...');
 
-            const searchCriteria = ['UNSEEN'];
+            // When using aliases, all mail lands in the primary inbox.
+            // We filter by the To header so each user only sees their own alias messages.
+            const searchCriteria: any[] = aliasFilter
+                ? ['UNSEEN', ['TO', aliasFilter]]
+                : ['UNSEEN'];
+
             const fetchOptions = {
                 bodies: ['HEADER', 'TEXT', ''],
                 markSeen: true
             };
 
             const messages = await connection.search(searchCriteria, fetchOptions);
-            console.log(`Found ${messages.length} messages.`);
+            console.log(`[IMAP] Found ${messages.length} unseen message(s)${aliasFilter ? ` for <${aliasFilter}>` : ''}.`);
 
             const parsedMessages = await Promise.all(messages.map(async (msg: any) => {
                 const all = msg.parts.find((part: any) => part.which === '');

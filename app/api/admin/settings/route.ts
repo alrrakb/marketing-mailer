@@ -50,14 +50,12 @@ export async function POST(req: Request) {
         }
 
         if (action === 'update_smtp') {
-            if (!value) return NextResponse.json({ error: 'Password is required' }, { status: 400 });
-
-            const { error } = await supabaseAdmin
-                .from('settings')
-                .upsert({ key: 'smtp_password', value: value, updated_at: new Date().toISOString() });
-
-            if (error) throw error;
-            return NextResponse.json({ message: 'SMTP Password updated successfully' });
+            // DEPRECATED: System now uses Resend API — no SMTP password required.
+            // Update RESEND_API_KEY in .env.local instead.
+            return NextResponse.json({
+                message: 'SMTP password management is deprecated. The system now uses Resend API for email delivery. Update RESEND_API_KEY in your environment variables.',
+                deprecated: true,
+            });
         }
 
         // Fetch Settings

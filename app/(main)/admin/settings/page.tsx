@@ -186,32 +186,23 @@ export default function AdminSettingsPage() {
                     </div>
                 </div>
 
-                {/* Integration Settings */}
+                {/* Email Provider — Resend */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50">
                         <Lock className="w-5 h-5 text-blue-600" />
                         <h2 className="font-semibold text-gray-900 dark:text-white">{dict.settings.integrations}</h2>
                     </div>
                     <div className="p-6">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{dict.settings.smtp_pass}</label>
-                        <div className="flex flex-col md:flex-row gap-4">
-                            <input
-                                type="text"
-                                value={smtpPassword}
-                                onChange={(e) => setSmtpPassword(e.target.value)}
-                                className="w-full md:flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#79bbe0] outline-none"
-                                placeholder={dict.settings.smtp_placeholder}
-                            />
-                            <button
-                                onClick={handleUpdateSmtp}
-                                disabled={isSavingSmtp}
-                                className="w-full md:w-auto bg-[#39285e] hover:bg-[#2d1f4b] text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#39285e]/20"
-                            >
-                                <Save className="w-4 h-4" />
-                                {isSavingSmtp ? dict.settings.saving : dict.settings.update}
-                            </button>
+                        <div className="flex items-start gap-3 p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+                            <div>
+                                <p className="font-medium text-green-800 dark:text-green-300">Resend API Active</p>
+                                <p className="text-sm text-green-700 dark:text-green-400 mt-1">
+                                    Email delivery is handled by Resend. SMTP credentials are no longer required.
+                                    To update the API key, edit <code className="bg-green-100 dark:bg-green-900 px-1 rounded">RESEND_API_KEY</code> in your environment variables and restart the server.
+                                </p>
+                            </div>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">{dict.settings.smtp_desc}</p>
                     </div>
                 </div>
 

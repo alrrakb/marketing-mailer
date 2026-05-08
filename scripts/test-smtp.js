@@ -16,13 +16,15 @@ async function main() {
         port: Number(process.env.SMTP_PORT),
         secure: process.env.SMTP_SECURE === 'true',
         auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
+            user: process.env.SMTP_AUTH_USER,
+            pass: process.env.SMTP_AUTH_PASS,
         },
     });
 
     console.log('Sending test email to:', targetEmail);
     console.log('Using SMTP Host:', process.env.SMTP_HOST);
+    console.log('Authenticating as (Primary):', process.env.SMTP_AUTH_USER);
+    console.log('Sending from (Alias):', process.env.SMTP_FROM_EMAIL);
 
     try {
         const info = await transporter.sendMail({
